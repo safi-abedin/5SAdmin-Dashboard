@@ -1,0 +1,116 @@
+<section class="user-page row g-4">
+    <div class="col-12">
+        <div class="d-flex align-items-center gap-2 mb-3">
+            <h1 class="h4 mb-0">User Management</h1>
+        </div>
+    </div>
+
+  <div class="col-12 col-xl-8">
+    <app-table
+      [columns]="columns"
+      [data]="rows()"
+      [totalItems]="totalItems()"
+      [pageSize]="pageSize()"
+      [currentPage]="currentPage()"
+      [isLoading]="isTableLoading()"
+      (pageChange)="onPageChange($event)"
+      (pageSizeChange)="onPageSizeChange($event)"
+      (view)="onView($event)"
+      (edit)="onEdit($event)"
+      (delete)="onDelete($event)"
+    />
+  </div>
+
+  <div class="col-12 col-xl-4">
+    <div class="card border-0 shadow-sm h-100">
+      <div class="card-body">
+        <h2 class="h5 mb-3">{{ formTitle() }}</h2>
+
+        <form [formGroup]="userForm" (ngSubmit)="saveUser()" class="row g-3" novalidate>
+          <div class="col-12">
+            <label for="name" class="form-label">Full Name</label>
+            <input id="name" type="text" class="form-control" formControlName="name" />
+          </div>
+
+          <div class="col-12">
+            <label for="username" class="form-label">Username</label>
+            <input id="username" type="text" class="form-control" formControlName="username" />
+          </div>
+
+          <div class="col-12">
+            <label for="password" class="form-label">Password</label>
+            <div class="input-group">
+              <input id="password" type="text" class="form-control" formControlName="password" />
+              <button type="button" class="btn btn-outline-secondary" (click)="generatePassword()">
+                Generate
+              </button>
+            </div>
+            <small class="text-secondary">
+              Use at least 8 characters with uppercase, lowercase, number, and special character.
+            </small>
+            @if (userForm.controls.password.touched && userForm.controls.password.invalid) {
+              <small class="text-danger d-block">Password does not meet required complexity.</small>
+            }
+          </div>
+
+          <div class="col-12">
+            <label for="role" class="form-label">Role</label>
+            <select id="role" class="form-select" formControlName="role">
+              @for (option of roleOptions(); track option.value) {
+                <option [value]="option.value">{{ option.label }}</option>
+              }
+            </select>
+            <small class="text-secondary">
+              @if (isCompanyAdmin()) {
+                Admin can create Auditor users only.
+              } @else {
+                Superadmin can create Auditor and Admin users.
+              }
+            </small>
+          </div>
+
+          @if (!isCompanyAdmin()) {
+            <div class="col-12">
+              <label for="companyId" class="form-label">Company</label>
+              <select id="companyId" class="form-select" formControlName="companyId">
+                <option [ngValue]="null" disabled>Select company</option>
+                @for (company of companies(); track company.id) {
+                  <option [ngValue]="company.id">{{ company.companyName }} ({{ company.companyCode }})</option>
+                }
+              </select>
+            </div>
+          }
+
+          <div class="col-12 d-flex gap-2 flex-wrap">
+            <button type="submit" class="btn btn-primary" [disabled]="isSaving()">
+              @if (editingUserId()) {
+                Update User
+              } @else {
+                Create User
+              }
+            </button>
+            <button type="button" class="btn btn-outline-secondary" (click)="resetForm()">Clear</button>
+          </div>
+        </form>
+
+        @if (selectedUser(); as user) {
+          <hr />
+          <h3 class="h6 mb-2">Selected User</h3>
+          <dl class="row mb-0 small">
+            <dt class="col-5">Name</dt>
+            <dd class="col-7">{{ user.name }}</dd>
+
+            <dt class="col-5">Username</dt>
+            <dd class="col-7">{{ user.username }}</dd>
+
+            <dt class="col-5">Role</dt>
+            <dd class="col-7 text-capitalize">{{ user.role }}</dd>
+
+            <dt class="col-5">Company</dt>
+            <dd class="col-7">{{ user.companyName ?? '-' }}</dd>
+          </dl>
+        }
+      </div>
+    </div>
+  </div>
+</section>

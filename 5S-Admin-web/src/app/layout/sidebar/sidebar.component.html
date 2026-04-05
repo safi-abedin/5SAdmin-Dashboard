@@ -1,0 +1,23 @@
+<aside class="sidebar d-flex flex-column bg-dark text-white p-3">
+  <div class="d-flex align-items-center gap-2 mb-4">
+    <img ngSrc="logo.png" width="40" height="40" alt="5S Audit logo" priority />
+    <span class="fw-semibold">5S Audit</span>
+  </div>
+
+  <nav aria-label="Main navigation">
+    <ul class="nav nav-pills flex-column gap-2">
+      @for (item of visibleMenuItems(); track item.route) {
+        <li class="nav-item">
+          <a
+            class="nav-link text-white"
+            routerLinkActive="active"
+            [routerLink]="item.route"
+            [routerLinkActiveOptions]="{ exact: true }"
+          >
+            {{ item.label }}
+          </a>
+        </li>
+      }
+    </ul>
+  </nav>
+</aside>

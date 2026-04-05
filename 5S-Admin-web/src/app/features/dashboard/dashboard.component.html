@@ -1,0 +1,24 @@
+<section class="card border-0 shadow-sm mb-3">
+  <div class="card-body">
+    <h2 class="h4 mb-2">Dashboard</h2>
+    <p class="mb-1">Welcome to the 5S Audit dashboard.</p>
+    <p class="text-secondary mb-0">Current role: <strong>{{ role() }}</strong></p>
+  </div>
+</section>
+
+<app-table
+  [columns]="columns"
+  [data]="pagedRows()"
+  [totalItems]="totalItems()"
+  [pageSize]="pageSize()"
+  [currentPage]="currentPage()"
+  [isLoading]="isLoading()"
+  [enableSearch]="true"
+  (pageChange)="onPageChange($event)"
+  (pageSizeChange)="onPageSizeChange($event)"
+  (searchChange)="onSearch($event)"
+  (sortChange)="onSort()"
+  (view)="onView($event)"
+  (edit)="onEdit($event)"
+  (delete)="onDelete($event)"
+/>

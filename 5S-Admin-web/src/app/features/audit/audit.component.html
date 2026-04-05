@@ -1,0 +1,32 @@
+<section class="card border-0 shadow-sm">
+  <div class="card-body">
+    <h2 class="h4 mb-3">Audit Checklist</h2>
+
+    <form [formGroup]="checklistForm" (ngSubmit)="submit()" class="row g-3" novalidate>
+      <div class="col-md-6">
+        <label for="area" class="form-label">Area</label>
+        <input id="area" class="form-control" formControlName="area" />
+        @if (checklistForm.controls.area.touched && checklistForm.controls.area.invalid) {
+          <small class="text-danger">Area is required.</small>
+        }
+      </div>
+
+      <div class="col-md-3">
+        <label for="score" class="form-label">Score (1-5)</label>
+        <input id="score" type="number" class="form-control" min="1" max="5" formControlName="score" />
+      </div>
+
+      <div class="col-12">
+        <label for="remarks" class="form-label">Remarks</label>
+        <textarea id="remarks" rows="3" class="form-control" formControlName="remarks"></textarea>
+      </div>
+
+      <div class="col-12 d-flex gap-2 align-items-center">
+        <button type="submit" class="btn btn-primary">Submit Checklist</button>
+        @if (submitted) {
+          <span class="text-success">Checklist submitted successfully.</span>
+        }
+      </div>
+    </form>
+  </div>
+</section>

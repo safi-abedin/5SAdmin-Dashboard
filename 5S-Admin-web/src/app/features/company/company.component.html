@@ -1,0 +1,93 @@
+<section class="company-page row g-4">
+ <div class="col-12">
+    <div class="d-flex align-items-center gap-2 mb-3">
+        <h1 class="h4 mb-0">Company Management</h1>
+    </div>
+ </div>
+
+  <div class="col-12 col-xl-8">
+    <app-table
+      [columns]="columns"
+      [data]="rows()"
+      [totalItems]="totalItems()"
+      [pageSize]="pageSize()"
+      [currentPage]="currentPage()"
+      [isLoading]="isTableLoading()"
+      (pageChange)="onPageChange($event)"
+      (pageSizeChange)="onPageSizeChange($event)"
+      (view)="onView($event)"
+      (edit)="onEdit($event)"
+      (delete)="onDelete($event)"
+    />
+  </div>
+
+  <div class="col-12 col-xl-4">
+    <div class="card border-0 shadow-sm h-100">
+      <div class="card-body">
+        <h2 class="h5 mb-3">{{ formTitle() }}</h2>
+
+        <form [formGroup]="companyForm" (ngSubmit)="saveCompany()" class="row g-3" novalidate>
+          <div class="col-12">
+            <label for="companyName" class="form-label">Company Name</label>
+            <input id="companyName" type="text" class="form-control" formControlName="companyName" />
+          </div>
+
+          <div class="col-12">
+            <label for="companyCode" class="form-label">Company Code</label>
+            <input id="companyCode" type="text" class="form-control" formControlName="companyCode" />
+          </div>
+
+          <div class="col-12">
+            <label for="contactPerson" class="form-label">Contact Person</label>
+            <input id="contactPerson" type="text" class="form-control" formControlName="contactPerson" />
+          </div>
+
+          <div class="col-12">
+            <label for="email" class="form-label">Email</label>
+            <input id="email" type="email" class="form-control" formControlName="email" />
+            @if (companyForm.controls.email.touched && companyForm.controls.email.invalid) {
+              <small class="text-danger">A valid email is required.</small>
+            }
+          </div>
+
+          <div class="col-12">
+            <label for="phone" class="form-label">Phone</label>
+            <input id="phone" type="text" class="form-control" formControlName="phone" />
+          </div>
+
+          <div class="col-12 d-flex gap-2 flex-wrap">
+            <button type="submit" class="btn btn-primary" [disabled]="isSaving()">
+              @if (editingCompanyId()) {
+                Update Company
+              } @else {
+                Create Company
+              }
+            </button>
+            <button type="button" class="btn btn-outline-secondary" (click)="resetForm()">Clear</button>
+          </div>
+        </form>
+
+        @if (selectedCompany(); as company) {
+          <hr />
+          <h3 class="h6 mb-2">Selected Company</h3>
+          <dl class="row mb-0 small">
+            <dt class="col-5">Name</dt>
+            <dd class="col-7">{{ company.companyName }}</dd>
+
+            <dt class="col-5">Code</dt>
+            <dd class="col-7">{{ company.companyCode }}</dd>
+
+            <dt class="col-5">Contact</dt>
+            <dd class="col-7">{{ company.contactPerson }}</dd>
+
+            <dt class="col-5">Email</dt>
+            <dd class="col-7">{{ company.email }}</dd>
+
+            <dt class="col-5">Phone</dt>
+            <dd class="col-7">{{ company.phone }}</dd>
+          </dl>
+        }
+      </div>
+    </div>
+  </div>
+</section>

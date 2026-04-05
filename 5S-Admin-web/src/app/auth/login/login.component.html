@@ -1,0 +1,53 @@
+<main class="login-page d-grid">
+  <section class="card login-card border-0 shadow">
+    <div class="card-body p-4 p-md-5">
+      <div class="d-flex align-items-center gap-2 mb-3">
+        <img ngSrc="logo.png" width="42" height="42" alt="5S Audit logo" priority />
+        <span class="badge text-bg-primary px-3 py-2">Garments 5S</span>
+      </div>
+
+      <h1 class="h3 mb-2">5S Audit System</h1>
+      <p class="text-secondary mb-4">Sign in with your company account.</p>
+
+      <form [formGroup]="form" (ngSubmit)="login()" class="row g-3" novalidate>
+        <div class="col-12">
+          <label for="companyCode" class="form-label">Company Code</label>
+          <input id="companyCode" type="text" class="form-control" formControlName="companyCode" />
+          @if (form.controls.companyCode.touched && form.controls.companyCode.invalid) {
+            <small class="text-danger">Company code is required.</small>
+          }
+        </div>
+
+        <div class="col-12">
+          <label for="username" class="form-label">Username</label>
+          <input id="username" type="text" class="form-control" formControlName="username" />
+          @if (form.controls.username.touched && form.controls.username.invalid) {
+            <small class="text-danger">Username is required.</small>
+          }
+        </div>
+
+        <div class="col-12">
+          <label for="password" class="form-label">Password</label>
+          <input id="password" type="password" class="form-control" formControlName="password" />
+          @if (form.controls.password.touched && form.controls.password.invalid) {
+            <small class="text-danger">Password is required.</small>
+          }
+        </div>
+
+        <div class="col-12 d-grid">
+          <button type="submit" class="btn btn-primary" [disabled]="isSubmitting()">
+            @if (isSubmitting()) {
+              Signing in...
+            } @else {
+              Login
+            }
+          </button>
+        </div>
+      </form>
+
+      <p class="small text-secondary mt-4 mb-0">
+        The login request is sent to the backend API with Company Code, Username, and Password.
+      </p>
+    </div>
+  </section>
+</main>

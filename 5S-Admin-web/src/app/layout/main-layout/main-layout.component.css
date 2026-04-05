@@ -1,0 +1,14 @@
+.app-shell {
+  min-height: 100vh;
+  background: linear-gradient(180deg, #f5f8fb 0%, #eef3f9 100%);
+}
+
+.content-shell {
+  min-width: 0;
+}
+
+@media (max-width: 991px) {
+  .app-shell {
+    flex-direction: column;
+  }
+}

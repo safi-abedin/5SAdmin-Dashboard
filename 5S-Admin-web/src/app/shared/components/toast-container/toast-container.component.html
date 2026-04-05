@@ -1,0 +1,22 @@
+<section class="toast-container" aria-live="assertive" aria-atomic="false" aria-relevant="additions text">
+  @if (toasts$ | async; as toasts) {
+    @for (toast of toasts; track toast.id) {
+      <article
+        class="toast-card"
+        role="status"
+        [class.toast-success]="toast.type === 'success'"
+        [class.toast-error]="toast.type === 'error'"
+        [class.toast-warning]="toast.type === 'warning'"
+        [class.toast-info]="toast.type === 'info'"
+      >
+        <p class="toast-message mb-0">{{ toast.message }}</p>
+        <button
+          type="button"
+          class="btn-close"
+          aria-label="Dismiss notification"
+          (click)="toastService.dismiss(toast.id)"
+        ></button>
+      </article>
+    }
+  }
+</section>

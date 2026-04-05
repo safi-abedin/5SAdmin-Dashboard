@@ -1,0 +1,130 @@
+<section class="table-shell card border-0 shadow-sm">
+  <div class="card-body p-3 p-lg-4">
+    <div class="d-flex flex-wrap gap-2 justify-content-between align-items-center mb-3">
+      <h2 class="h5 mb-0">Records</h2>
+
+      <div class="d-flex flex-wrap gap-2 align-items-center">
+        @if (enableSearch()) {
+          <input
+            type="search"
+            class="form-control form-control-sm table-search"
+            [value]="searchTerm()"
+            [placeholder]="searchPlaceholder()"
+            [disabled]="isLoading()"
+            (input)="onSearchInputEvent($event)"
+          />
+        }
+
+        <label class="small text-secondary mb-0" for="table-page-size">Rows</label>
+        <select
+          id="table-page-size"
+          class="form-select form-select-sm page-size-select"
+          [disabled]="isLoading()"
+          [value]="pageSize()"
+          (change)="onPageSizeChangeEvent($event)"
+        >
+          @for (size of pageSizeOptions(); track size) {
+            <option [value]="size">{{ size }}</option>
+          }
+        </select>
+      </div>
+    </div>
+
+    <div class="table-responsive table-wrap" [class.is-loading]="isLoading()">
+      <table class="table table-striped table-hover align-middle mb-0">
+        <thead class="table-light sticky-header">
+          <tr>
+            @for (column of columns(); track column.field) {
+              <th scope="col" [style.width]="column.width || null" [class]="getAlignClass(column)">
+                <button
+                  type="button"
+                  class="column-button"
+                  [disabled]="!column.sortable || isLoading()"
+                  [class.not-sortable]="!column.sortable"
+                  (click)="onSort(column)"
+                >
+                  <span>{{ column.header }}</span>
+                  @if (column.sortable) {
+                    <span class="sort-indicator" [class.is-active]="getSortDirection(column) !== ''">
+                      @if (getSortDirection(column) === 'asc') {
+                        ▲
+                      } @else if (getSortDirection(column) === 'desc') {
+                        ▼
+                      } @else {
+                        ⇅
+                      }
+                    </span>
+                  }
+                </button>
+              </th>
+            }
+            <th scope="col" class="text-center action-header sticky-action">Actions</th>
+          </tr>
+        </thead>
+
+        <tbody>
+          @if (isLoading()) {
+            <tr>
+              <td [attr.colspan]="columns().length + 1" class="text-center py-4">
+                <div class="spinner-border spinner-border-sm text-primary" role="status" aria-label="Loading"></div>
+                <span class="ms-2 text-secondary">Loading records...</span>
+              </td>
+            </tr>
+          } @else if (data().length === 0) {
+            <tr>
+              <td [attr.colspan]="columns().length + 1" class="text-center py-4 text-secondary">
+                No Data Available
+              </td>
+            </tr>
+          } @else {
+            @for (row of data(); track trackByRow($index, row)) {
+              <tr>
+                @for (column of columns(); track trackByColumn($index, column)) {
+                  <td [class]="getAlignClass(column)">{{ resolveCellText(row, column.field) }}</td>
+                }
+                <td class="text-center sticky-action action-cell">
+                  <div class="d-flex justify-content-center gap-1 flex-wrap">
+                    <button type="button" class="btn btn-outline-primary btn-sm" (click)="view.emit(row)">
+                      <span aria-hidden="true">👁</span>
+                      <span class="ms-1">View</span>
+                    </button>
+                    <button type="button" class="btn btn-outline-secondary btn-sm" (click)="edit.emit(row)">
+                      <span aria-hidden="true">✎</span>
+                      <span class="ms-1">Edit</span>
+                    </button>
+                    <button type="button" class="btn btn-outline-danger btn-sm" (click)="delete.emit(row)">
+                      <span aria-hidden="true">🗑</span>
+                      <span class="ms-1">Delete</span>
+                    </button>
+                  </div>
+                </td>
+              </tr>
+            }
+          }
+        </tbody>
+      </table>
+    </div>
+
+    <nav class="d-flex justify-content-between align-items-center mt-3" aria-label="Table pagination">
+      <span class="small text-secondary">Page {{ currentPage() }} of {{ totalPages() }}</span>
+
+      <ul class="pagination pagination-sm mb-0">
+        <li class="page-item" [class.disabled]="currentPage() <= 1 || isLoading()">
+          <button type="button" class="page-link" (click)="changePage(currentPage() - 1)">Previous</button>
+        </li>
+
+        @for (pageNumber of visiblePageNumbers(); track pageNumber) {
+          <li class="page-item" [class.active]="pageNumber === currentPage()">
+            <button type="button" class="page-link" (click)="changePage(pageNumber)">
+              {{ pageNumber }}
+            </button>
+          </li>
+        }
+
+        <li class="page-item" [class.disabled]="currentPage() >= totalPages() || isLoading()">
+          <button type="button" class="page-link" (click)="changePage(currentPage() + 1)">Next</button>
+        </li>
+      </ul>
+    </nav>
+  </div>
+</section>

@@ -1,0 +1,57 @@
+:host {
+  display: block;
+}
+
+.checklist-page {
+  align-items: stretch;
+}
+
+.category-card {
+  overflow: hidden;
+}
+
+.category-card .card-header {
+  padding: 0.8rem 1rem 0;
+}
+
+.category-card .card-body {
+  padding-top: 0.6rem;
+}
+
+.category-tabs {
+  border-bottom: 0;
+  gap: 0.35rem;
+  overflow-x: auto;
+  flex-wrap: nowrap;
+  padding-bottom: 0.35rem;
+}
+
+.category-tabs .nav-link {
+  border: 1px solid #dbe3ec;
+  border-radius: 0.6rem;
+  color: #435266;
+  background-color: #f8fbff;
+  white-space: nowrap;
+}
+
+.category-tabs .nav-link:hover {
+  background-color: #edf4ff;
+}
+
+.category-tabs .nav-link.active {
+  border-color: #0d6efd;
+  color: #0d6efd;
+  background-color: #e9f2ff;
+  font-weight: 600;
+}
+
+.table td,
+.table th {
+  vertical-align: middle;
+}
+
+@media (max-width: 1199px) {
+  .checklist-page {
+    row-gap: 1rem;
+  }
+}

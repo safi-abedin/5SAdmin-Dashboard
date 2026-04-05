@@ -1,0 +1,18 @@
+.login-page {
+  min-height: 100vh;
+  place-items: center;
+  background:
+    radial-gradient(circle at 10% 20%, rgb(255 246 230) 0%, transparent 45%),
+    radial-gradient(circle at 90% 80%, rgb(226 241 255) 0%, transparent 45%),
+    #f2f5f8;
+  padding: 1rem;
+}
+
+.login-card {
+  width: min(100%, 460px);
+}
+
+.badge {
+  font-weight: 600;
+  letter-spacing: 0.03em;
+}
