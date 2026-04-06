@@ -1,3 +1,3 @@
 export const environment = {
-  apiUrl: 'https://localhost:7161/api'
+  apiUrl: 'https://5sapi.bazarlagbebd.com/api'
 };
