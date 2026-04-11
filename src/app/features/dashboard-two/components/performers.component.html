@@ -1,0 +1,22 @@
+<section class="panel-card" aria-label="Top performers">
+  <div class="panel-header">
+    <div>
+      <p class="eyebrow">Performance</p>
+      <h3>Top performers</h3>
+    </div>
+  </div>
+
+  <ol class="performer-list">
+    @for (performer of performers(); track performer.userName) {
+      <li>
+        <div>
+          <strong>{{ performer.userName }}</strong>
+          <small>Average score</small>
+        </div>
+        <span>{{ performer.averagePercentage | number: '1.0-2' }}%</span>
+      </li>
+    } @empty {
+      <li class="empty-state">No performer data available.</li>
+    }
+  </ol>
+</section>

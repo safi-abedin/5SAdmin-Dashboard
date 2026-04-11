@@ -1,0 +1,99 @@
+<section class="profile-shell">
+  <header class="profile-hero">
+    <div>
+      <p class="eyebrow">Profile</p>
+      <h1>Account and company branding</h1>
+      <p class="subtitle">Update company address and logo from one place.</p>
+    </div>
+  </header>
+
+  @if (isLoading()) {
+    <section class="state-card" role="status" aria-live="polite">Loading profile...</section>
+  }
+
+  @if (!isLoading() && profile(); as data) {
+    <section class="panel-grid">
+      <article class="card profile-info" aria-label="Profile details">
+        <h2>My profile</h2>
+        <dl>
+          <div>
+            <dt>Name</dt>
+            <dd>{{ data.name }}</dd>
+          </div>
+          <div>
+            <dt>Username</dt>
+            <dd>{{ data.userName }}</dd>
+          </div>
+          <div>
+            <dt>Role</dt>
+            <dd>{{ data.role }}</dd>
+          </div>
+          <div>
+            <dt>Company</dt>
+            <dd>{{ data.companyName || 'Not assigned' }}</dd>
+          </div>
+          <div>
+            <dt>Email</dt>
+            <dd>{{ data.email || 'Not available' }}</dd>
+          </div>
+          <div>
+            <dt>Phone</dt>
+            <dd>{{ data.phone || 'Not available' }}</dd>
+          </div>
+        </dl>
+      </article>
+
+      <article class="card branding" aria-label="Company branding">
+        <h2>Company branding</h2>
+
+        @if (!isCompanyMapped()) {
+          <p class="inline-warning">Your account is not currently mapped to a company.</p>
+        }
+
+        <div class="logo-row">
+          <div class="logo-frame">
+            @if (logoPreviewUrl()) {
+              <img [src]="logoPreviewUrl()!" alt="Selected company logo preview" />
+            } @else if (data.companyLogoUrl) {
+              <img [src]="data.companyLogoUrl" alt="Current company logo" />
+            } @else {
+              <span>No logo</span>
+            }
+          </div>
+
+          <label class="upload-field" for="logo-file">Choose logo image</label>
+          <input
+            id="logo-file"
+            type="file"
+            accept="image/*"
+            [disabled]="isSaving() || !isCompanyMapped()"
+            (change)="onLogoSelected($event)"
+          />
+        </div>
+
+        <form [formGroup]="brandingForm" (ngSubmit)="saveBranding()" class="branding-form">
+          <label for="company-address">Company Address</label>
+          <textarea
+            id="company-address"
+            formControlName="companyAddress"
+            rows="4"
+            [disabled]="isSaving() || !isCompanyMapped()"
+            placeholder="Enter company address"
+          ></textarea>
+
+          @if (brandingForm.controls.companyAddress.invalid && brandingForm.controls.companyAddress.touched) {
+            <p class="inline-error">Address is too long.</p>
+          }
+
+          <button
+            type="submit"
+            class="save-btn"
+            [disabled]="isSaving() || !isCompanyMapped()"
+          >
+            {{ isSaving() ? 'Saving...' : 'Save Branding' }}
+          </button>
+        </form>
+      </article>
+    </section>
+  }
+</section>

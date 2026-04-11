@@ -1,10 +1,17 @@
-<div class="app-shell d-flex">
+<div class="app-shell d-flex" [class.mobile-menu-open]="layoutShellService.isMobileMenuOpen()">
   <app-sidebar />
+
+  <button
+    type="button"
+    class="mobile-overlay"
+    aria-label="Close navigation menu"
+    (click)="closeMobileMenu()"
+  ></button>
 
   <div class="content-shell flex-grow-1 d-flex flex-column">
     <app-navbar />
 
-    <main class="p-4 flex-grow-1" tabindex="-1" id="main-content">
+    <main class="content-main p-4 flex-grow-1" tabindex="-1" id="main-content">
       <router-outlet />
     </main>
   </div>

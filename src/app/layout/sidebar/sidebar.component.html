@@ -1,6 +1,18 @@
-<aside class="sidebar d-flex flex-column bg-dark text-white p-3">
-  <div class="d-flex align-items-center gap-2 ms-3 mb-4">
+<aside
+  class="sidebar d-flex flex-column bg-dark text-white p-3"
+  (touchstart)="onTouchStart($event)"
+  (touchend)="onTouchEnd($event)"
+>
+  <div class="d-flex align-items-center justify-content-between gap-2 ms-3 mb-4">
     <span class="fw-semibold">5S Audit</span>
+    <button
+      type="button"
+      class="btn btn-sm btn-outline-light sidebar-close-btn"
+      aria-label="Close navigation menu"
+      (click)="closeMobileMenu()"
+    >
+      ×
+    </button>
   </div>
 
   <nav aria-label="Main navigation">
@@ -12,6 +24,7 @@
             routerLinkActive="active"
             [routerLink]="item.route"
             [routerLinkActiveOptions]="{ exact: true }"
+            (click)="closeMobileMenu()"
           >
             {{ item.label }}
           </a>

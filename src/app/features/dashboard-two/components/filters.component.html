@@ -1,0 +1,57 @@
+<section class="filters-card" aria-label="Dashboard filters">
+  <div class="filters-grid">
+    @if (showCompanySelector()) {
+      <label class="filter-field">
+        <span>Company</span>
+        <select
+          [value]="selectedCompanyId() ?? ''"
+          [disabled]="loading()"
+          (change)="onCompanyChange(companySelect.value)"
+          #companySelect
+        >
+          <option value="">Select a company</option>
+          @for (company of companies(); track company.id) {
+            <option [value]="company.id">{{ company.companyName }}</option>
+          }
+        </select>
+      </label>
+    }
+
+    <label class="filter-field">
+      <span>User</span>
+      <select
+        [value]="selectedUserId() ?? ''"
+        [disabled]="loading()"
+        (change)="onUserChange(userSelect.value)"
+        #userSelect
+      >
+        <option value="">All users</option>
+        @for (user of users(); track user.id) {
+          <option [value]="user.id">{{ user.name }} ({{ user.username }})</option>
+        }
+      </select>
+    </label>
+
+    <label class="filter-field">
+      <span>From date</span>
+      <input
+        type="date"
+        [value]="fromDate()"
+        [disabled]="loading()"
+        (change)="onFromDateChange(fromDateInput.value)"
+        #fromDateInput
+      />
+    </label>
+
+    <label class="filter-field">
+      <span>To date</span>
+      <input
+        type="date"
+        [value]="toDate()"
+        [disabled]="loading()"
+        (change)="onToDateChange(toDateInput.value)"
+        #toDateInput
+      />
+    </label>
+  </div>
+</section>

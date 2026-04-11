@@ -2,3 +2,27 @@
   font-weight: 700;
   letter-spacing: 0.02em;
 }
+
+.mobile-menu-btn {
+  display: none;
+}
+
+@media (max-width: 991px) {
+  .mobile-menu-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .navbar-title {
+    font-size: 1rem;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 150px;
+  }
+
+  .logout-btn {
+    padding-inline: 0.55rem;
+  }
+}

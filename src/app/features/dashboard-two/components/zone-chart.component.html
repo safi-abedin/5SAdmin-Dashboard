@@ -1,0 +1,16 @@
+<section class="panel-card chart-card">
+  <div class="panel-header">
+    <div>
+      <p class="eyebrow">Zones</p>
+      <h3>Zone performance</h3>
+    </div>
+  </div>
+
+  @if (zones().length > 0) {
+    <div class="chart-box">
+      <canvas #zoneCanvas aria-label="Zone performance pie chart" role="img"></canvas>
+    </div>
+  } @else {
+    <div class="empty-state">No zone performance data available.</div>
+  }
+</section>

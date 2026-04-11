@@ -1,0 +1,25 @@
+<section class="summary-grid" aria-label="Dashboard summary metrics">
+  <article class="summary-card primary">
+    <span>Total Audits</span>
+    <strong>{{ summary()?.totalAudits ?? 0 }}</strong>
+    <small>All audits in the selected range</small>
+  </article>
+
+  <article class="summary-card accent">
+    <span>Average Score</span>
+    <strong>{{ (summary()?.averagePercentage ?? 0) | number: '1.0-2' }}%</strong>
+    <small>Average audit percentage</small>
+  </article>
+
+  <article class="summary-card warning">
+    <span>Open Red Tags</span>
+    <strong>{{ summary()?.openRedTags ?? 0 }}</strong>
+    <small>Items still open</small>
+  </article>
+
+  <article class="summary-card success">
+    <span>Closed Red Tags</span>
+    <strong>{{ summary()?.closedRedTags ?? 0 }}</strong>
+    <small>Items already closed</small>
+  </article>
+</section>

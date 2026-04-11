@@ -1,32 +1,286 @@
-<section class="card border-0 shadow-sm">
-  <div class="card-body">
-    <h2 class="h4 mb-3">Audit Checklist</h2>
+<section class="audit-page">
+  <header class="page-header">
+    <div>
+      <p class="eyebrow">Audit Feature</p>
+      <h1>Audits Explorer</h1>
+      <p>Filter and sort audits by zone, score, user, status, and date ranges.</p>
+    </div>
+  </header>
 
-    <form [formGroup]="checklistForm" (ngSubmit)="submit()" class="row g-3" novalidate>
-      <div class="col-md-6">
-        <label for="area" class="form-label">Area</label>
-        <input id="area" class="form-control" formControlName="area" />
-        @if (checklistForm.controls.area.touched && checklistForm.controls.area.invalid) {
-          <small class="text-danger">Area is required.</small>
-        }
-      </div>
+  <section class="card filters-card">
+    <form [formGroup]="filterForm" class="filters-grid" (ngSubmit)="onApplyFilters()">
+      @if (isSuperAdmin()) {
+        <label>
+          <span>Company</span>
+          <select
+            formControlName="companyId"
+            [disabled]="isLoadingCompanies()"
+            (change)="onCompanyChange(company.value)"
+            #company
+          >
+            <option value="0">Select company</option>
+            @for (item of companies(); track item.id) {
+              <option [value]="item.id">{{ item.companyName }}</option>
+            }
+          </select>
+        </label>
+      }
 
-      <div class="col-md-3">
-        <label for="score" class="form-label">Score (1-5)</label>
-        <input id="score" type="number" class="form-control" min="1" max="5" formControlName="score" />
-      </div>
+      <label>
+        <span>Zone</span>
+        <select formControlName="zoneId">
+          <option value="0">All zones</option>
+          @for (zone of zones(); track zone.id) {
+            <option [value]="zone.id">{{ zone.name }}</option>
+          }
+        </select>
+      </label>
 
-      <div class="col-12">
-        <label for="remarks" class="form-label">Remarks</label>
-        <textarea id="remarks" rows="3" class="form-control" formControlName="remarks"></textarea>
-      </div>
+      <label>
+        <span>User</span>
+        <select formControlName="userId" [disabled]="isLoadingUsers()">
+          <option value="0">All users</option>
+          @for (user of users(); track user.id) {
+            <option [value]="user.id">{{ user.name }}</option>
+          }
+        </select>
+      </label>
 
-      <div class="col-12 d-flex gap-2 align-items-center">
-        <button type="submit" class="btn btn-primary">Submit Checklist</button>
-        @if (submitted) {
-          <span class="text-success">Checklist submitted successfully.</span>
-        }
+      <label>
+        <span>Status</span>
+        <select formControlName="status">
+          <option value="">All statuses</option>
+          @for (status of statusOptions; track status) {
+            <option [value]="status">{{ status }}</option>
+          }
+        </select>
+      </label>
+
+      <label>
+        <span>Min Score</span>
+        <input type="number" step="0.01" formControlName="minScore" placeholder="0" />
+      </label>
+
+      <label>
+        <span>Max Score</span>
+        <input type="number" step="0.01" formControlName="maxScore" placeholder="100" />
+      </label>
+
+      <label>
+        <span>Created From</span>
+        <input type="date" formControlName="createdFrom" />
+      </label>
+
+      <label>
+        <span>Created To</span>
+        <input type="date" formControlName="createdTo" />
+      </label>
+
+      <label>
+        <span>Audit Date From</span>
+        <input type="date" formControlName="auditDateFrom" />
+      </label>
+
+      <label>
+        <span>Audit Date To</span>
+        <input type="date" formControlName="auditDateTo" />
+      </label>
+
+      <div class="filter-actions">
+        <button type="submit" class="btn btn-primary" [disabled]="isLoading()">Apply</button>
+        <button type="button" class="btn btn-outline-secondary" (click)="onResetFilters()">Reset</button>
       </div>
     </form>
-  </div>
+  </section>
+
+  @if (errorMessage()) {
+    <div class="alert alert-danger" role="alert">{{ errorMessage() }}</div>
+  }
+
+  <section class="content-grid">
+    <article class="card table-card">
+      <div class="table-head">
+        <h2>Audits</h2>
+        <div>
+          <label for="audit-page-size">Rows</label>
+          <select
+            id="audit-page-size"
+            [value]="pageSize()"
+            (change)="onPageSizeChange(pageSizeSelect.value)"
+            #pageSizeSelect
+          >
+            @for (size of pageSizes; track size) {
+              <option [value]="size">{{ size }}</option>
+            }
+          </select>
+        </div>
+      </div>
+
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th><button type="button" (click)="onSort('AuditDate')">Audit Date</button></th>
+              <th><button type="button" (click)="onSort('AuditorName')">Auditor</button></th>
+              <th><button type="button" (click)="onSort('ZoneName')">Zone</button></th>
+              <th><button type="button" (click)="onSort('Department')">Department</button></th>
+              <th><button type="button" (click)="onSort('Percentage')">Score %</button></th>
+              <th><button type="button" (click)="onSort('Status')">Status</button></th>
+              <th><button type="button" (click)="onSort('CreatedAt')">Created</button></th>
+              <th class="text-center">Detail</th>
+            </tr>
+          </thead>
+          <tbody>
+            @if (isLoading()) {
+              <tr>
+                <td colspan="8" class="empty">Loading audits...</td>
+              </tr>
+            } @else {
+              @for (row of rows(); track row.id) {
+                <tr>
+                  <td>{{ row.auditDate | date: 'mediumDate' }}</td>
+                  <td>{{ row.auditorName }}</td>
+                  <td>{{ row.zoneName || ('Zone #' + row.zoneId) }}</td>
+                  <td>{{ row.department }}</td>
+                  <td>{{ row.percentage | number: '1.0-2' }}%</td>
+                  <td><span class="status-pill">{{ row.status }}</span></td>
+                  <td>{{ row.createdAt | date: 'mediumDate' }}</td>
+                  <td class="text-center">
+                    <button
+                      type="button"
+                      class="btn btn-sm btn-outline-primary"
+                      (click)="onViewDetails(row.id)"
+                    >
+                      View
+                    </button>
+                  </td>
+                </tr>
+              } @empty {
+                <tr>
+                  <td colspan="8" class="empty">No audits found.</td>
+                </tr>
+              }
+            }
+          </tbody>
+        </table>
+      </div>
+
+      <div class="pager">
+        <span>Page {{ currentPage() }} / {{ totalPages() }}</span>
+        <div class="pager-actions">
+          <button type="button" class="btn btn-sm btn-outline-secondary" [disabled]="currentPage() <= 1" (click)="onPageChange(currentPage() - 1)">
+            Prev
+          </button>
+          <button type="button" class="btn btn-sm btn-outline-secondary" [disabled]="currentPage() >= totalPages()" (click)="onPageChange(currentPage() + 1)">
+            Next
+          </button>
+        </div>
+      </div>
+    </article>
+  </section>
+
+  @if (isDetailModalOpen() && selectedAudit(); as item) {
+    <section class="detail-modal" role="dialog" aria-modal="true" aria-label="Audit detail">
+      <button
+        type="button"
+        class="modal-backdrop"
+        aria-label="Close detail modal"
+        (click)="closeDetailsModal()"
+      ></button>
+
+      <article class="modal-card">
+        <header class="modal-header">
+          <div>
+            <p class="eyebrow">Audit Detail</p>
+            <h2>#{{ item.id }} - {{ item.auditorName }}</h2>
+          </div>
+          <button type="button" class="btn btn-outline-secondary btn-sm" (click)="closeDetailsModal()">Close</button>
+        </header>
+
+        <section class="meta-grid">
+          <div><span>Zone</span><strong>{{ item.zoneName || ('Zone #' + item.zoneId) }}</strong></div>
+          <div><span>Auditee</span><strong>{{ item.auditeeName }}</strong></div>
+          <div><span>Department</span><strong>{{ item.department }}</strong></div>
+          <div><span>Audit Date</span><strong>{{ item.auditDate | date: 'mediumDate' }}</strong></div>
+          <div><span>Total Score</span><strong>{{ item.totalScore | number: '1.0-2' }}</strong></div>
+          <div><span>Percentage</span><strong>{{ item.percentage | number: '1.0-2' }}%</strong></div>
+          <div><span>Status</span><strong>{{ item.status }}</strong></div>
+          <div><span>Created</span><strong>{{ item.createdAt | date: 'medium' }}</strong></div>
+        </section>
+
+        <section class="modal-section">
+          <h3>Checklist Items</h3>
+
+          <div class="category-tabs" role="tablist" aria-label="Audit categories">
+            @for (tab of categoryTabs(); track tab.categoryId) {
+              <button
+                type="button"
+                class="category-tab-btn"
+                [class.active]="activeCategoryId() === tab.categoryId"
+                (click)="selectCategory(tab.categoryId)"
+              >
+                {{ tab.categoryName }}
+              </button>
+            } @empty {
+              <span class="empty">No categories available.</span>
+            }
+          </div>
+
+          <div class="modal-table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th>Order</th>
+                  <th>Category</th>
+                  <th>Checking Item</th>
+                  <th>Criteria</th>
+                  <th>Score</th>
+                </tr>
+              </thead>
+              <tbody>
+                @for (line of activeCategoryItems(); track line.id ?? line.checklistItemId) {
+                  <tr>
+                    <td>{{ line.order ?? '-' }}</td>
+                    <td>{{ line.catagoryName || ('Cat #' + (line.checklistCatagoryId || '-')) }}</td>
+                    <td>{{ line.checkingItemName || ('Checklist #' + line.checklistItemId) }}</td>
+                    <td>{{ line.evaluationCriteria || '-' }}</td>
+                    <td>{{ line.score }}</td>
+                  </tr>
+                } @empty {
+                  <tr>
+                    <td colspan="5" class="empty">No item lines found for this category.</td>
+                  </tr>
+                }
+              </tbody>
+            </table>
+          </div>
+        </section>
+
+        <section class="modal-section">
+          <h3>Feedback</h3>
+          <div class="feedback-list">
+            @for (feedback of item.feedBackItems ?? []; track feedback.id ?? $index) {
+              <article class="feedback-card">
+                <p>{{ feedback.comment || 'No comment' }}</p>
+                <small>Good: {{ feedback.good ? 'Yes' : 'No' }} | Bad: {{ feedback.bad ? 'Yes' : 'No' }}</small>
+              </article>
+            } @empty {
+              <p class="empty">No feedback entries.</p>
+            }
+          </div>
+
+          <h3>Feedback Images</h3>
+          <div class="image-grid">
+            @for (imageUrl of feedbackImageUrls(item); track imageUrl) {
+              <a [href]="imageUrl" target="_blank" rel="noopener" class="image-tile-link">
+                <img [src]="imageUrl" alt="Audit feedback image" />
+              </a>
+            } @empty {
+              <p class="empty">No feedback images.</p>
+            }
+          </div>
+        </section>
+      </article>
+    </section>
+  }
 </section>

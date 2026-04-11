@@ -1,0 +1,79 @@
+<section class="dashboard-two-shell">
+  <header class="hero-card">
+    <div class="hero-copy">
+      <p class="eyebrow">Dashboard Two</p>
+      <h1>Audit performance overview</h1>
+      <p class="subtitle">
+        Clean, filterable analytics for audits, red tags, feedback, and top performers.
+      </p>
+      <div class="hero-meta">
+        <span>{{ userName() }}</span>
+        <span>{{ isSuperAdmin() ? 'Super admin' : 'Company admin' }}</span>
+        <span>{{ selectedCompanyName() }}</span>
+      </div>
+    </div>
+
+    <div class="hero-status">
+      <div class="status-pill" [class.alert]="!selectedCompanyId()">
+        @if (selectedCompanyId()) {
+          Company selected
+        } @else {
+          Company required
+        }
+      </div>
+      <p>
+        @if (fromDate() || toDate()) {
+          Custom date range applied
+        } @else {
+          Using the default dashboard range
+        }
+      </p>
+    </div>
+  </header>
+
+  <app-dashboard-two-filters
+    [showCompanySelector]="isSuperAdmin()"
+    [loading]="isLoading() || isLoadingCompanies() || isLoadingUsers()"
+    [companies]="companies()"
+    [users]="users()"
+    [selectedCompanyId]="selectedCompanyId()"
+    [selectedUserId]="selectedUserId()"
+    [fromDate]="fromDate()"
+    [toDate]="toDate()"
+    (companyChange)="onCompanyChange($event)"
+    (userChange)="onUserChange($event)"
+    (fromDateChange)="onFromDateChange($event)"
+    (toDateChange)="onToDateChange($event)"
+  />
+
+  @if (isLoadingProfile() || isLoading()) {
+    <section class="state-card" role="status" aria-live="polite">
+      Loading dashboard two analytics...
+    </section>
+  }
+
+  @if (notice()) {
+    <section class="state-card muted" role="status">{{ notice() }}</section>
+  }
+
+  @if (error()) {
+    <section class="state-card error" role="alert">{{ error() }}</section>
+  }
+
+  @if (!isLoading() && summary(); as summaryData) {
+    <app-summary-cards [summary]="summaryData" />
+
+    <section class="grid three-up">
+      <app-trend-chart [points]="trend()" />
+      <app-category-chart [categories]="categoryScores()" />
+      <app-zone-chart [zones]="zonePerformance()" />
+    </section>
+
+    <section class="grid two-up">
+      <app-performers [performers]="topPerformers()" />
+      <app-feedback-chart [feedback]="feedbackSummary()" />
+    </section>
+
+    <app-recent-audits [audits]="recentAudits()" />
+  }
+</section>

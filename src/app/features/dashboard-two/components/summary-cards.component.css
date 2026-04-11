@@ -1,0 +1,58 @@
+:host {
+  display: block;
+}
+
+.summary-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 0.9rem;
+}
+
+.summary-card {
+  border-radius: 1rem;
+  padding: 1rem;
+  background: #fff;
+  border: 1px solid #dfe7ef;
+  box-shadow: 0 10px 30px rgba(15, 23, 42, 0.06);
+  display: grid;
+  gap: 0.35rem;
+  min-height: 120px;
+}
+
+.summary-card span {
+  color: #5c6b7f;
+  font-size: 0.82rem;
+  font-weight: 600;
+}
+
+.summary-card strong {
+  color: #10233f;
+  font-size: 1.8rem;
+  line-height: 1.1;
+}
+
+.summary-card small {
+  color: #6c7c90;
+}
+
+.summary-card.primary {
+  border-top: 4px solid #0f62fe;
+}
+
+.summary-card.accent {
+  border-top: 4px solid #16a34a;
+}
+
+.summary-card.warning {
+  border-top: 4px solid #f97316;
+}
+
+.summary-card.success {
+  border-top: 4px solid #0891b2;
+}
+
+@media (max-width: 640px) {
+  .summary-grid {
+    grid-template-columns: 1fr 1fr;
+  }
+}

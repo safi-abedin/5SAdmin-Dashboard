@@ -1,5 +1,6 @@
-import { ChangeDetectionStrategy, Component } from '@angular/core';
+import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
 import { RouterOutlet } from '@angular/router';
+import { LayoutShellService } from '../layout-shell.service';
 import { NavbarComponent } from '../navbar/navbar.component';
 import { SidebarComponent } from '../sidebar/sidebar.component';
 
@@ -10,4 +11,10 @@ import { SidebarComponent } from '../sidebar/sidebar.component';
   styleUrl: './main-layout.component.css',
   changeDetection: ChangeDetectionStrategy.OnPush
 })
-export class MainLayoutComponent {}
+export class MainLayoutComponent {
+  protected readonly layoutShellService = inject(LayoutShellService);
+
+  protected closeMobileMenu(): void {
+    this.layoutShellService.closeMobileMenu();
+  }
+}

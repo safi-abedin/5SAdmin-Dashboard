@@ -1,0 +1,16 @@
+<section class="panel-card chart-card">
+  <div class="panel-header">
+    <div>
+      <p class="eyebrow">Trend</p>
+      <h3>Audit trend</h3>
+    </div>
+  </div>
+
+  @if (points().length > 0) {
+    <div class="chart-box">
+      <canvas #trendCanvas aria-label="Audit trend chart" role="img"></canvas>
+    </div>
+  } @else {
+    <div class="empty-state">No trend data available.</div>
+  }
+</section>

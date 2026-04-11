@@ -1,0 +1,32 @@
+<section class="panel-card chart-card">
+  <div class="panel-header">
+    <div>
+      <p class="eyebrow">Feedback</p>
+      <h3>Feedback insights</h3>
+    </div>
+  </div>
+
+  @if (feedback(); as data) {
+    <div class="chart-layout">
+      <div class="chart-box">
+        <canvas #feedbackCanvas aria-label="Feedback donut chart" role="img"></canvas>
+      </div>
+      <div class="feedback-meta">
+        <div>
+          <span>Good</span>
+          <strong>{{ data.goodCount }}</strong>
+        </div>
+        <div>
+          <span>Bad</span>
+          <strong>{{ data.badCount }}</strong>
+        </div>
+        <div>
+          <span>Total</span>
+          <strong>{{ data.totalFeedbacks }}</strong>
+        </div>
+      </div>
+    </div>
+  } @else {
+    <div class="empty-state">No feedback summary available.</div>
+  }
+</section>

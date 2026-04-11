@@ -1,0 +1,43 @@
+:host {
+  display: block;
+}
+
+.panel-card {
+  background: #fff;
+  border: 1px solid #dbe4ee;
+  border-radius: 1rem;
+  padding: 1rem;
+  box-shadow: 0 10px 28px rgba(15, 23, 42, 0.06);
+}
+
+.panel-header {
+  margin-bottom: 0.75rem;
+}
+
+.eyebrow {
+  margin: 0;
+  color: #64748b;
+  text-transform: uppercase;
+  font-size: 0.72rem;
+  letter-spacing: 0.08em;
+  font-weight: 700;
+}
+
+.panel-card h3 {
+  margin: 0.2rem 0 0;
+  color: #10233f;
+}
+
+.chart-box {
+  height: 280px;
+}
+
+.empty-state {
+  min-height: 240px;
+  display: grid;
+  place-items: center;
+  color: #6b7b8e;
+  background: #f8fafc;
+  border-radius: 0.8rem;
+  border: 1px dashed #cfd9e4;
+}

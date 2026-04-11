@@ -1,0 +1,16 @@
+<section class="panel-card chart-card">
+  <div class="panel-header">
+    <div>
+      <p class="eyebrow">Scores</p>
+      <h3>Category scores</h3>
+    </div>
+  </div>
+
+  @if (categories().length > 0) {
+    <div class="chart-box">
+      <canvas #categoryCanvas aria-label="Category scores bar chart" role="img"></canvas>
+    </div>
+  } @else {
+    <div class="empty-state">No category score data available.</div>
+  }
+</section>

@@ -1,0 +1,217 @@
+<section class="redtag-page">
+  <header class="page-header">
+    <div>
+      <p class="eyebrow">Red Tag Feature</p>
+      <h1>Red Tag Explorer</h1>
+      <p>Filter by user, status, created/identified/closed date, then open full detail.</p>
+    </div>
+  </header>
+
+  <section class="card filters-card">
+    <form [formGroup]="filterForm" class="filters-grid" (ngSubmit)="onApplyFilters()">
+      @if (isSuperAdmin()) {
+        <label>
+          <span>Company</span>
+          <select
+            formControlName="companyId"
+            [disabled]="isLoadingCompanies()"
+            (change)="onCompanyChange(company.value)"
+            #company
+          >
+            <option value="0">Select company</option>
+            @for (item of companies(); track item.id) {
+              <option [value]="item.id">{{ item.companyName }}</option>
+            }
+          </select>
+        </label>
+      }
+
+      <label>
+        <span>User</span>
+        <select formControlName="userId" [disabled]="isLoadingUsers()">
+          <option value="0">All users</option>
+          @for (user of users(); track user.id) {
+            <option [value]="user.id">{{ user.name }}</option>
+          }
+        </select>
+      </label>
+
+      <label>
+        <span>Status</span>
+        <select formControlName="status">
+          <option value="">All statuses</option>
+          @for (status of statusOptions; track status) {
+            <option [value]="status">{{ status }}</option>
+          }
+        </select>
+      </label>
+
+      <label>
+        <span>Created From</span>
+        <input type="date" formControlName="createdFrom" />
+      </label>
+
+      <label>
+        <span>Created To</span>
+        <input type="date" formControlName="createdTo" />
+      </label>
+
+      <label>
+        <span>Identified From</span>
+        <input type="date" formControlName="identifiedDateFrom" />
+      </label>
+
+      <label>
+        <span>Identified To</span>
+        <input type="date" formControlName="identifiedDateTo" />
+      </label>
+
+      <label>
+        <span>Closed From</span>
+        <input type="date" formControlName="closingDateFrom" />
+      </label>
+
+      <label>
+        <span>Closed To</span>
+        <input type="date" formControlName="closingDateTo" />
+      </label>
+
+      <div class="filter-actions">
+        <button type="submit" class="btn btn-primary" [disabled]="isLoading()">Apply</button>
+        <button type="button" class="btn btn-outline-secondary" (click)="onResetFilters()">Reset</button>
+      </div>
+    </form>
+  </section>
+
+  @if (errorMessage()) {
+    <div class="alert alert-danger" role="alert">{{ errorMessage() }}</div>
+  }
+
+  <section class="content-grid">
+    <article class="card table-card">
+      <div class="table-head">
+        <h2>Red Tags</h2>
+        <div>
+          <label for="redtag-page-size">Rows</label>
+          <select id="redtag-page-size" [value]="pageSize()" (change)="onPageSizeChange(pageSizeSelect.value)" #pageSizeSelect>
+            @for (size of pageSizes; track size) {
+              <option [value]="size">{{ size }}</option>
+            }
+          </select>
+        </div>
+      </div>
+
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th><button type="button" (click)="onSort('CreatedAt')">Preview</button></th>
+              <th><button type="button" (click)="onSort('ItemName')">Item</button></th>
+              <th><button type="button" (click)="onSort('ResponsiblePerson')">User</button></th>
+              <th><button type="button" (click)="onSort('Status')">Status</button></th>
+              <th><button type="button" (click)="onSort('IdentifiedDate')">Identified</button></th>
+              <th><button type="button" (click)="onSort('ClosingDate')">Closed</button></th>
+              <th><button type="button" (click)="onSort('CreatedAt')">Created</button></th>
+              <th class="text-center">Detail</th>
+            </tr>
+          </thead>
+          <tbody>
+            @if (isLoading()) {
+              <tr>
+                <td colspan="8" class="empty">Loading red tags...</td>
+              </tr>
+            } @else {
+              @for (row of rows(); track row.id) {
+                <tr>
+                  <td>
+                    @if (row.photoUrl.length > 0) {
+                      <img class="preview-thumb" [src]="row.photoUrl[0]" alt="Red tag photo preview" />
+                    } @else {
+                      <span class="empty">-</span>
+                    }
+                  </td>
+                  <td>{{ row.itemName }}</td>
+                  <td>{{ row.responsiblePerson }}</td>
+                  <td><span class="status-pill">{{ row.status }}</span></td>
+                  <td>{{ row.identifiedDate | date: 'mediumDate' }}</td>
+                  <td>{{ row.closingDate ? (row.closingDate | date: 'mediumDate') : '-' }}</td>
+                  <td>{{ row.createdAt | date: 'mediumDate' }}</td>
+                  <td class="text-center">
+                    <button type="button" class="btn btn-sm btn-outline-primary" (click)="onViewDetails(row.id)">
+                      View
+                    </button>
+                  </td>
+                </tr>
+              } @empty {
+                <tr>
+                  <td colspan="8" class="empty">No red tags found.</td>
+                </tr>
+              }
+            }
+          </tbody>
+        </table>
+      </div>
+
+      <div class="pager">
+        <span>Page {{ currentPage() }} / {{ totalPages() }}</span>
+        <div class="pager-actions">
+          <button type="button" class="btn btn-sm btn-outline-secondary" [disabled]="currentPage() <= 1" (click)="onPageChange(currentPage() - 1)">
+            Prev
+          </button>
+          <button type="button" class="btn btn-sm btn-outline-secondary" [disabled]="currentPage() >= totalPages()" (click)="onPageChange(currentPage() + 1)">
+            Next
+          </button>
+        </div>
+      </div>
+    </article>
+  </section>
+
+  @if (isDetailModalOpen() && selectedRedTag(); as item) {
+    <section class="detail-modal" role="dialog" aria-modal="true" aria-label="Red tag detail">
+      <button
+        type="button"
+        class="modal-backdrop"
+        aria-label="Close detail modal"
+        (click)="closeDetailsModal()"
+      ></button>
+
+      <article class="modal-card">
+        <header class="modal-header">
+          <div>
+            <p class="eyebrow">Red Tag Detail</p>
+            <h2>#{{ item.id }} - {{ item.itemName }}</h2>
+          </div>
+          <button type="button" class="btn btn-outline-secondary btn-sm" (click)="closeDetailsModal()">Close</button>
+        </header>
+
+        <section class="meta-grid">
+          <div><span>Responsible</span><strong>{{ item.responsiblePerson }}</strong></div>
+          <div><span>Status</span><strong>{{ item.status }}</strong></div>
+          <div><span>Identified Date</span><strong>{{ item.identifiedDate | date: 'mediumDate' }}</strong></div>
+          <div><span>Closing Date</span><strong>{{ item.closingDate ? (item.closingDate | date: 'mediumDate') : '-' }}</strong></div>
+          <div><span>Quantity</span><strong>{{ item.quantity }}</strong></div>
+          <div><span>Location</span><strong>{{ item.location || '-' }}</strong></div>
+          <div><span>Created</span><strong>{{ item.createdAt | date: 'medium' }}</strong></div>
+        </section>
+
+        <section class="modal-section">
+          <h3>Description</h3>
+          <p class="desc">{{ item.description || 'No description.' }}</p>
+        </section>
+
+        <section class="modal-section">
+          <h3>Photos</h3>
+          <div class="image-grid">
+            @for (photo of item.photoUrl; track photo) {
+              <a [href]="photo" target="_blank" rel="noopener" class="image-tile-link">
+                <img [src]="photo" alt="Red tag image" />
+              </a>
+            } @empty {
+              <p class="empty">No photos available.</p>
+            }
+          </div>
+        </section>
+      </article>
+    </section>
+  }
+</section>

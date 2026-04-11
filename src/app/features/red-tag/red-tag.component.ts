@@ -1,51 +1,39 @@
-import { DatePipe, DecimalPipe } from '@angular/common';
+import { DatePipe } from '@angular/common';
 import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule } from '@angular/forms';
 import { finalize } from 'rxjs/operators';
-import { AuditResponseDto } from '../../core/models/audit-record.model';
 import { CompanyDto } from '../../core/models/company.model';
+import { RedTagResponseDto } from '../../core/models/red-tag.model';
 import { Role } from '../../core/models/role.model';
 import { UserDto } from '../../core/models/user-management.model';
-import { ZoneDto } from '../../core/models/zone.model';
-import { AuditRecordService } from '../../core/services/audit-record.service';
 import { AuthService } from '../../core/services/auth.service';
 import { CompanyService } from '../../core/services/company.service';
+import { RedTagService } from '../../core/services/red-tag.service';
 import { ToastService } from '../../core/services/toast.service';
 import { UserManagementService } from '../../core/services/user-management.service';
-import { ZoneService } from '../../core/services/zone.service';
-
-interface AuditCategoryTab {
-  categoryId: number;
-  categoryName: string;
-  categoryOrder: number;
-  items: AuditResponseDto['items'];
-}
 
 @Component({
-  selector: 'app-audit',
-  imports: [ReactiveFormsModule, DatePipe, DecimalPipe],
-  templateUrl: './audit.component.html',
-  styleUrl: './audit.component.css',
+  selector: 'app-red-tag',
+  imports: [ReactiveFormsModule, DatePipe],
+  templateUrl: './red-tag.component.html',
+  styleUrl: './red-tag.component.css',
   changeDetection: ChangeDetectionStrategy.OnPush
 })
-export class AuditComponent {
+export class RedTagComponent {
   private readonly authService = inject(AuthService);
   private readonly formBuilder = inject(FormBuilder);
   private readonly companyService = inject(CompanyService);
   private readonly userService = inject(UserManagementService);
-  private readonly zoneService = inject(ZoneService);
-  private readonly auditService = inject(AuditRecordService);
+  private readonly redTagService = inject(RedTagService);
   private readonly toastService = inject(ToastService);
 
   protected readonly isSuperAdmin = computed(() => this.authService.getRole() === Role.SUPER_ADMIN);
   protected readonly companies = signal<CompanyDto[]>([]);
   protected readonly users = signal<UserDto[]>([]);
-  protected readonly zones = signal<ZoneDto[]>([]);
 
-  protected readonly rows = signal<AuditResponseDto[]>([]);
-  protected readonly selectedAudit = signal<AuditResponseDto | null>(null);
+  protected readonly rows = signal<RedTagResponseDto[]>([]);
+  protected readonly selectedRedTag = signal<RedTagResponseDto | null>(null);
   protected readonly isDetailModalOpen = signal(false);
-  protected readonly activeCategoryId = signal<number | null>(null);
 
   protected readonly isLoading = signal(false);
   protected readonly isLoadingCompanies = signal(false);
@@ -60,79 +48,23 @@ export class AuditComponent {
   protected readonly sortDirection = signal<'asc' | 'desc'>('desc');
 
   protected readonly pageSizes = [10, 20, 50];
-  protected readonly statusOptions = ['submitted', 'inprogress', 'completed', 'draft'];
+  protected readonly statusOptions = ['Open', 'InProgress', 'Closed'];
 
   protected readonly totalPages = computed(() => {
     const size = Math.max(1, this.pageSize());
     return Math.max(1, Math.ceil(this.totalItems() / size));
   });
 
-  protected readonly categoryTabs = computed<AuditCategoryTab[]>(() => {
-    const audit = this.selectedAudit();
-    if (!audit) {
-      return [];
-    }
-
-    const grouped = new Map<number, AuditCategoryTab>();
-
-    for (const line of audit.items ?? []) {
-      const id = line.checklistCatagoryId ?? -1;
-      const current = grouped.get(id);
-
-      if (!current) {
-        grouped.set(id, {
-          categoryId: id,
-          categoryName: line.catagoryName || `Category ${id}`,
-          categoryOrder: line.catagoryOrder ?? Number.MAX_SAFE_INTEGER,
-          items: [line]
-        });
-        continue;
-      }
-
-      current.items = [...current.items, line];
-      if (!current.categoryName && line.catagoryName) {
-        current.categoryName = line.catagoryName;
-      }
-      current.categoryOrder = Math.min(current.categoryOrder, line.catagoryOrder ?? Number.MAX_SAFE_INTEGER);
-    }
-
-    return [...grouped.values()]
-      .map((tab) => ({
-        ...tab,
-        items: [...tab.items].sort(
-          (left, right) =>
-            (left.order ?? Number.MAX_SAFE_INTEGER) - (right.order ?? Number.MAX_SAFE_INTEGER) ||
-            left.checklistItemId - right.checklistItemId
-        )
-      }))
-      .sort(
-        (left, right) =>
-          left.categoryOrder - right.categoryOrder || left.categoryName.localeCompare(right.categoryName)
-      );
-  });
-
-  protected readonly activeCategoryItems = computed(() => {
-    const tabs = this.categoryTabs();
-    if (tabs.length === 0) {
-      return [];
-    }
-
-    const selected = this.activeCategoryId();
-    const found = tabs.find((tab) => tab.categoryId === selected);
-    return (found ?? tabs[0]).items;
-  });
-
   protected readonly filterForm = this.formBuilder.nonNullable.group({
     companyId: this.authService.getCompanyId() ?? 0,
-    zoneId: 0,
     userId: 0,
     status: '',
-    minScore: '',
-    maxScore: '',
     createdFrom: '',
     createdTo: '',
-    auditDateFrom: '',
-    auditDateTo: ''
+    identifiedDateFrom: '',
+    identifiedDateTo: '',
+    closingDateFrom: '',
+    closingDateTo: ''
   });
 
   constructor() {
@@ -141,24 +73,23 @@ export class AuditComponent {
 
   protected onApplyFilters(): void {
     this.currentPage.set(1);
-    this.loadAudits();
+    this.loadRedTags();
   }
 
   protected onResetFilters(): void {
     this.filterForm.reset({
       companyId: this.authService.getCompanyId() ?? 0,
-      zoneId: 0,
       userId: 0,
       status: '',
-      minScore: '',
-      maxScore: '',
       createdFrom: '',
       createdTo: '',
-      auditDateFrom: '',
-      auditDateTo: ''
+      identifiedDateFrom: '',
+      identifiedDateTo: '',
+      closingDateFrom: '',
+      closingDateTo: ''
     });
 
-    this.selectedAudit.set(null);
+    this.selectedRedTag.set(null);
     this.currentPage.set(1);
     this.sortBy.set('CreatedAt');
     this.sortDirection.set('desc');
@@ -168,7 +99,7 @@ export class AuditComponent {
       this.loadUsers(companyId);
     }
 
-    this.loadAudits();
+    this.loadRedTags();
   }
 
   protected onCompanyChange(value: string): void {
@@ -183,7 +114,7 @@ export class AuditComponent {
     }
 
     this.currentPage.set(1);
-    this.loadAudits();
+    this.loadRedTags();
   }
 
   protected onPageChange(page: number): void {
@@ -192,7 +123,7 @@ export class AuditComponent {
     }
 
     this.currentPage.set(page);
-    this.loadAudits();
+    this.loadRedTags();
   }
 
   protected onPageSizeChange(value: string): void {
@@ -203,7 +134,7 @@ export class AuditComponent {
 
     this.pageSize.set(parsed);
     this.currentPage.set(1);
-    this.loadAudits();
+    this.loadRedTags();
   }
 
   protected onSort(field: string): void {
@@ -215,48 +146,26 @@ export class AuditComponent {
     }
 
     this.currentPage.set(1);
-    this.loadAudits();
+    this.loadRedTags();
   }
 
   protected onViewDetails(id: number): void {
-    this.auditService.getById(id).subscribe({
-      next: (audit) => {
-        this.selectedAudit.set(audit);
-        this.activeCategoryId.set(this.firstCategoryIdFromAudit(audit));
+    this.redTagService.getById(id).subscribe({
+      next: (item) => {
+        this.selectedRedTag.set(item);
         this.isDetailModalOpen.set(true);
       },
       error: () => {
-        this.toastService.error('Unable to load audit details.');
+        this.toastService.error('Unable to load red tag details.');
       }
     });
   }
 
   protected closeDetailsModal(): void {
     this.isDetailModalOpen.set(false);
-    this.activeCategoryId.set(null);
-  }
-
-  protected selectCategory(categoryId: number): void {
-    this.activeCategoryId.set(categoryId);
-  }
-
-  protected feedbackImageUrls(item: AuditResponseDto): string[] {
-    return (item.feedBackItems ?? []).flatMap((feedback) => feedback.imageUrls ?? []);
-  }
-
-  private firstCategoryIdFromAudit(audit: AuditResponseDto): number | null {
-    const firstItem = [...(audit.items ?? [])].sort(
-      (left, right) =>
-        (left.catagoryOrder ?? Number.MAX_SAFE_INTEGER) -
-        (right.catagoryOrder ?? Number.MAX_SAFE_INTEGER)
-    )[0];
-
-    return firstItem?.checklistCatagoryId ?? null;
   }
 
   private bootstrap(): void {
-    this.loadZones();
-
     if (this.isSuperAdmin()) {
       this.loadCompanies();
       return;
@@ -265,7 +174,7 @@ export class AuditComponent {
     const companyId = this.resolveSelectedCompanyId();
     if (companyId) {
       this.loadUsers(companyId);
-      this.loadAudits();
+      this.loadRedTags();
     } else {
       this.errorMessage.set('Logged in admin is not mapped to a company.');
     }
@@ -291,7 +200,7 @@ export class AuditComponent {
             this.loadUsers(selected);
           }
 
-          this.loadAudits();
+          this.loadRedTags();
         },
         error: () => {
           this.toastService.error('Unable to load companies.');
@@ -307,8 +216,7 @@ export class AuditComponent {
       .pipe(finalize(() => this.isLoadingUsers.set(false)))
       .subscribe({
         next: (response) => {
-          const users = (response.data ?? []).filter((user) => user.companyId === companyId);
-          this.users.set(users);
+          this.users.set((response.data ?? []).filter((user) => user.companyId === companyId));
         },
         error: () => {
           this.users.set([]);
@@ -317,18 +225,7 @@ export class AuditComponent {
       });
   }
 
-  private loadZones(): void {
-    this.zoneService.getAll({ page: 1, size: 500 }).subscribe({
-      next: (response) => {
-        this.zones.set(response.data ?? []);
-      },
-      error: () => {
-        this.zones.set([]);
-      }
-    });
-  }
-
-  private loadAudits(): void {
+  private loadRedTags(): void {
     const companyId = this.resolveSelectedCompanyId();
     if (!companyId) {
       this.rows.set([]);
@@ -342,25 +239,21 @@ export class AuditComponent {
     const selectedUserId = Number(this.filterForm.controls.userId.value);
     const selectedUser = this.users().find((user) => user.id === selectedUserId);
 
-    const minScoreValue = Number(this.filterForm.controls.minScore.value);
-    const maxScoreValue = Number(this.filterForm.controls.maxScore.value);
-
-    this.auditService
+    this.redTagService
       .getAll({
         page: this.currentPage(),
         size: this.pageSize(),
         sortBy: this.sortBy(),
         sortDirection: this.sortDirection(),
         companyId,
-        zoneId: this.parseNumberOrNull(this.filterForm.controls.zoneId.value),
-        auditorName: selectedUser?.name ?? null,
+        responsiblePerson: selectedUser?.name ?? null,
         status: this.filterForm.controls.status.value || null,
-        minScore: Number.isFinite(minScoreValue) && minScoreValue > 0 ? minScoreValue : null,
-        maxScore: Number.isFinite(maxScoreValue) && maxScoreValue > 0 ? maxScoreValue : null,
         createdFrom: this.filterForm.controls.createdFrom.value || null,
         createdTo: this.filterForm.controls.createdTo.value || null,
-        auditDateFrom: this.filterForm.controls.auditDateFrom.value || null,
-        auditDateTo: this.filterForm.controls.auditDateTo.value || null
+        identifiedDateFrom: this.filterForm.controls.identifiedDateFrom.value || null,
+        identifiedDateTo: this.filterForm.controls.identifiedDateTo.value || null,
+        closingDateFrom: this.filterForm.controls.closingDateFrom.value || null,
+        closingDateTo: this.filterForm.controls.closingDateTo.value || null
       })
       .pipe(finalize(() => this.isLoading.set(false)))
       .subscribe({
@@ -373,7 +266,7 @@ export class AuditComponent {
         error: () => {
           this.rows.set([]);
           this.totalItems.set(0);
-          this.errorMessage.set('Unable to load audits with selected filters.');
+          this.errorMessage.set('Unable to load red tags with selected filters.');
         }
       });
   }
@@ -385,10 +278,5 @@ export class AuditComponent {
     }
 
     return this.authService.getCompanyId();
-  }
-
-  private parseNumberOrNull(value: string | number): number | null {
-    const parsed = Number(value);
-    return Number.isFinite(parsed) && parsed > 0 ? parsed : null;
   }
 }

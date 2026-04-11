@@ -2,13 +2,13 @@
   display: block;
 }
 
-.audit-page {
+.redtag-page {
   display: grid;
   gap: 1rem;
 }
 
 .page-header {
-  background: linear-gradient(135deg, #0f62fe 0%, #1659d2 60%, #123d8f 100%);
+  background: linear-gradient(135deg, #b42318 0%, #c2410c 58%, #7f1d1d 100%);
   color: #fff;
   border-radius: 1rem;
   padding: 1rem 1.2rem;
@@ -116,7 +116,7 @@ td {
 }
 
 tbody tr:hover {
-  background: #f8fbff;
+  background: #fff8f6;
 }
 
 th button {
@@ -143,6 +143,14 @@ th button {
   color: #6a7b8f;
 }
 
+.preview-thumb {
+  width: 44px;
+  height: 44px;
+  object-fit: cover;
+  border-radius: 0.5rem;
+  border: 1px solid #d9e3ef;
+}
+
 .status-pill {
   display: inline-flex;
   align-items: center;
@@ -150,8 +158,8 @@ th button {
   padding: 0.2rem 0.55rem;
   font-size: 0.75rem;
   font-weight: 700;
-  background: #e8f0ff;
-  color: #1d4fbf;
+  background: #fff1ec;
+  color: #b93815;
 }
 
 .detail-modal {
@@ -208,8 +216,8 @@ th button {
 }
 
 .meta-grid div {
-  background: #f8fbff;
-  border: 1px solid #e2ebf5;
+  background: #fff8f6;
+  border: 1px solid #f3ddd7;
   border-radius: 0.7rem;
   padding: 0.55rem 0.65rem;
 }
@@ -233,56 +241,14 @@ th button {
   margin: 0 0 0.45rem;
 }
 
-.modal-table-wrap {
-  overflow: auto;
-}
-
-.category-tabs {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.45rem;
-  margin-bottom: 0.6rem;
-}
-
-.category-tab-btn {
-  border: 1px solid #cfd9e6;
-  border-radius: 999px;
-  background: #f8fbff;
-  color: #314761;
-  font-weight: 700;
-  font-size: 0.82rem;
-  padding: 0.35rem 0.7rem;
-}
-
-.category-tab-btn.active {
-  border-color: #0f62fe;
-  background: #0f62fe;
-  color: #fff;
-}
-
-.feedback-list {
-  display: grid;
-  gap: 0.5rem;
-}
-
-.feedback-card {
-  background: #f8fbff;
-  border: 1px solid #e2ebf5;
-  border-radius: 0.7rem;
-  padding: 0.55rem 0.65rem;
-}
-
-.feedback-card p {
+.desc {
   margin: 0;
-}
-
-.feedback-card small {
-  color: #63748b;
+  color: #334155;
 }
 
 .image-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(130px, 1fr));
+  grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
   gap: 0.55rem;
 }
 
@@ -296,7 +262,7 @@ th button {
 
 .image-tile-link img {
   width: 100%;
-  height: 115px;
+  height: 120px;
   object-fit: cover;
   display: block;
 }
@@ -329,8 +295,12 @@ ul {
   padding-left: 1.1rem;
 }
 
+a {
+  word-break: break-all;
+}
+
 @media (max-width: 1100px) {
   table {
-    min-width: 840px;
+    min-width: 860px;
   }
 }

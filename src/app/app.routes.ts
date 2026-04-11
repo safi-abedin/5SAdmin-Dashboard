@@ -20,6 +20,13 @@ export const routes: Routes = [
 					import('./features/dashboard/dashboard.component').then((m) => m.DashboardComponent)
 			},
 			{
+				path: 'dashboard-two',
+				loadComponent: () =>
+					import('./features/dashboard-two/dashboard-two.component').then(
+						(m) => m.DashboardTwoComponent
+					)
+			},
+			{
 				path: 'companies',
 				canActivate: [roleGuard],
 				data: {
@@ -27,6 +34,15 @@ export const routes: Routes = [
 				},
 				loadComponent: () =>
 					import('./features/company/company.component').then((m) => m.CompanyComponent)
+			},
+			{
+				path: 'audits',
+				loadComponent: () => import('./features/audit/audit.component').then((m) => m.AuditComponent)
+			},
+			{
+				path: 'red-tags',
+				loadComponent: () =>
+					import('./features/red-tag/red-tag.component').then((m) => m.RedTagComponent)
 			},
 			{
 				path: 'checklists',
@@ -51,8 +67,13 @@ export const routes: Routes = [
 				loadComponent: () => import('./features/zone/zone.component').then((m) => m.ZoneComponent)
 			},
 			{
+				path: 'profile',
+				loadComponent: () =>
+					import('./features/profile/profile.component').then((m) => m.ProfileComponent)
+			},
+			{
 				path: 'audit',
-				redirectTo: 'checklists',
+				redirectTo: 'audits',
 				pathMatch: 'full'
 			},
 			{
