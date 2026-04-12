@@ -1,0 +1,28 @@
+<section class="fs-modal" role="dialog" aria-modal="true" [attr.aria-label]="title()">
+  <button
+    type="button"
+    class="fs-modal-backdrop"
+    aria-label="Close modal"
+    (click)="closeModal()"
+  ></button>
+
+  <article class="fs-modal-shell" #modalShell tabindex="-1" (keydown)="onKeyDown($event)">
+    <header class="fs-modal-header">
+      <div>
+        @if (subtitle()) {
+          <p class="fs-modal-subtitle">{{ subtitle() }}</p>
+        }
+        <h2>{{ title() }}</h2>
+      </div>
+
+      <div class="fs-modal-header-actions">
+        <ng-content select="[modal-header-actions]"></ng-content>
+        <button type="button" class="btn btn-outline-secondary btn-sm" (click)="closeModal()">Close</button>
+      </div>
+    </header>
+
+    <div class="fs-modal-content">
+      <ng-content></ng-content>
+    </div>
+  </article>
+</section>

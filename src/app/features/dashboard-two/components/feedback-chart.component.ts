@@ -41,7 +41,7 @@ export class FeedbackChartComponent {
         datasets: [
           {
             data: [feedback.goodCount, feedback.badCount],
-            backgroundColor: [colors[1], colors[4]],
+            backgroundColor: [ '#10b981','#ef4444'],
             borderColor: '#ffffff',
             borderWidth: 2,
             hoverOffset: 4

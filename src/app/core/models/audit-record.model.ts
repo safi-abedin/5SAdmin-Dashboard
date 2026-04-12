@@ -1,5 +1,11 @@
 import { PagedResponse } from './pagination.model';
 
+export enum AuditStatus {
+  Draft = 1,
+  Submitted = 2,
+  Reviewed = 3
+}
+
 export interface AuditItemDto {
   id: number | null;
   checklistItemId: number;
@@ -31,7 +37,7 @@ export interface AuditResponseDto {
   createdAt: string;
   totalScore: number;
   percentage: number;
-  status: string;
+  status: string | number;
   items: AuditItemDto[];
   feedBackItems: FeedBackItemDto[] | null;
 }

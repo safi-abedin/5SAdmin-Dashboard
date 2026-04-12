@@ -1,175 +1,105 @@
 <section class="checklist-page row g-4">
-<div class="col-12">
-    <div class="d-flex align-items-center gap-2 mb-3">
-        <h1 class="h4 mb-0">Checklist Management</h1>
+   <header class="page-header">
+    <div>
+      <h1>CheckList Management</h1>
+      <p>Manage your checklist items and categories.</p>
     </div>
- </div>
+  </header>
 
-  <div class="col-12 col-xl-8">
-    @if (isTableLoading()) {
-      <div class="card border-0 shadow-sm">
-        <div class="card-body py-5 d-flex justify-content-center align-items-center gap-2">
-          <div class="spinner-border spinner-border-sm text-primary" role="status" aria-label="Loading"></div>
-          <span class="text-secondary">Loading checklist items...</span>
-        </div>
-      </div>
-    } @else if (groupedChecklists().length === 0) {
-      <div class="card border-0 shadow-sm">
-        <div class="card-body py-5 text-center text-secondary">No checklist items available.</div>
-      </div>
-    } @else {
-      <section class="card border-0 shadow-sm category-card">
-        <div class="card-header bg-white border-0 pb-0">
-          <ul class="nav nav-tabs category-tabs" role="tablist">
-            @for (group of groupedChecklists(); track trackByCategory($index, group)) {
-              <li class="nav-item" role="presentation">
-                <button
-                  type="button"
-                  class="nav-link"
-                  [class.active]="isCategoryActive(group.categoryId)"
-                  role="tab"
-                  [attr.aria-selected]="isCategoryActive(group.categoryId)"
-                  (click)="selectCategory(group.categoryId)"
-                >
-                  {{ group.categoryName }}
-                  <span class="badge rounded-pill text-bg-light ms-2">{{ group.items.length }}</span>
-                </button>
-              </li>
-            }
-          </ul>
-        </div>
-
-        <div class="card-body pt-3">
-          @if (activeGroup(); as group) {
-            <div class="d-flex justify-content-between align-items-center mb-3 flex-wrap gap-2">
-              <h2 class="h5 mb-0">{{ group.categoryName }}</h2>
-              <span class="text-secondary small">{{ group.items.length }} checklist item(s)</span>
-            </div>
-
-            <div class="table-responsive">
-              <table class="table table-striped table-hover align-middle mb-0">
-                <thead class="table-light">
-                  <tr>
-                    <th scope="col" style="width: 80px" class="text-center">Order</th>
-                    <th scope="col">Checking Item</th>
-                    <th scope="col">Evaluation Criteria</th>
-                    <th scope="col" style="width: 100px" class="text-center">Max Score</th>
-                    <th scope="col" style="width: 220px" class="text-center">Actions</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  @for (item of group.items; track trackByChecklist($index, item)) {
-                    <tr>
-                      <td class="text-center">{{ item.order }}</td>
-                      <td>{{ item.checkingItemName }}</td>
-                      <td>{{ item.evaluationCriteria }}</td>
-                      <td class="text-center">{{ item.maxScore }}</td>
-                      <td>
-                        <div class="d-flex justify-content-center gap-1 flex-wrap">
-                          <button type="button" class="btn btn-outline-primary btn-sm" (click)="onView(item)">
-                            View
-                          </button>
-                          <button type="button" class="btn btn-outline-secondary btn-sm" (click)="onEdit(item)">
-                            Edit
-                          </button>
-                          <button type="button" class="btn btn-outline-danger btn-sm" (click)="onDelete(item)">
-                            Delete
-                          </button>
-                        </div>
-                      </td>
-                    </tr>
-                  }
-                </tbody>
-              </table>
-            </div>
-          }
-        </div>
-      </section>
-    }
+  <div class="col-12">
+    <app-table
+      title="Checklist Items"
+      primaryActionLabel="Create Checklist Item"
+      [columns]="columns"
+      [data]="rows()"
+      [totalItems]="rows().length"
+      [currentPage]="1"
+      [pageSize]="rows().length || 10"
+      [isLoading]="isTableLoading()"
+      [showDeleteAction]="true"
+      [showEditAction]="true"
+      [showViewAction]="true"
+      (view)="onView($event)"
+      (edit)="onEdit($event)"
+      (delete)="onDelete($event)"
+      (primaryAction)="openCreateModal()"
+    />
   </div>
 
-  <div class="col-12 col-xl-4">
-    <div class="card border-0 shadow-sm h-100">
-      <div class="card-body">
-        <h2 class="h5 mb-3">{{ formTitle() }}</h2>
+  @if (isModalOpen()) {
+    <app-fullscreen-modal
+      [title]="modalMode() === 'view' ? 'Checklist Item Details' : formTitle()"
+      subtitle="Audit Checklist"
+      (close)="closeModal()"
+    >
+      @if (modalMode() === 'view' && selectedChecklist(); as item) {
+        <section class="modal-panel">
+          <dl class="row mb-0">
+            <dt class="col-sm-3">Category</dt>
+            <dd class="col-sm-9">{{ item.categoryName || resolveCategoryName(item.categoryId) }}</dd>
 
-        <form [formGroup]="checklistForm" (ngSubmit)="saveChecklist()" class="row g-3" novalidate>
-          <div class="col-12">
-            <label for="categoryId" class="form-label">Checklist Category</label>
-            <select id="categoryId" class="form-select" formControlName="categoryId">
-              <option [ngValue]="0" disabled>Select category</option>
-              @for (category of categories(); track category.id) {
-                <option [ngValue]="category.id">{{ category.name }}</option>
-              }
-            </select>
-            @if (checklistForm.controls.categoryId.touched && checklistForm.controls.categoryId.invalid) {
-              <small class="text-danger">Category is required.</small>
-            }
-          </div>
+            <dt class="col-sm-3">Item</dt>
+            <dd class="col-sm-9">{{ item.checkingItemName }}</dd>
 
-          <div class="col-12">
-            <label for="checkingItemName" class="form-label">Checking Item Name</label>
-            <input
-              id="checkingItemName"
-              type="text"
-              class="form-control"
-              formControlName="checkingItemName"
-            />
-          </div>
+            <dt class="col-sm-3">Criteria</dt>
+            <dd class="col-sm-9">{{ item.evaluationCriteria }}</dd>
 
-          <div class="col-12">
-            <label for="evaluationCriteria" class="form-label">Evaluation Criteria</label>
-            <textarea
-              id="evaluationCriteria"
-              rows="3"
-              class="form-control"
-              formControlName="evaluationCriteria"
-            ></textarea>
-          </div>
+            <dt class="col-sm-3">Max Score</dt>
+            <dd class="col-sm-9">{{ item.maxScore }}</dd>
 
-          <div class="col-md-6">
-            <label for="maxScore" class="form-label">Max Score</label>
-            <input id="maxScore" type="number" min="1" class="form-control" formControlName="maxScore" />
-          </div>
-
-          <div class="col-md-6">
-            <label for="order" class="form-label">Order</label>
-            <input id="order" type="number" min="1" class="form-control" formControlName="order" />
-          </div>
-
-          <div class="col-12 d-flex gap-2 flex-wrap">
-            <button type="submit" class="btn btn-primary" [disabled]="isSaving()">
-              @if (editingChecklistId()) {
-                Update Item
-              } @else {
-                Create Item
-              }
-            </button>
-            <button type="button" class="btn btn-outline-secondary" (click)="resetForm()">Clear</button>
-          </div>
-        </form>
-
-        @if (selectedChecklist(); as item) {
-          <hr />
-          <h3 class="h6 mb-2">Selected Item</h3>
-          <dl class="row mb-0 small">
-            <dt class="col-5">Category</dt>
-            <dd class="col-7">{{ item.categoryName || resolveCategoryName(item.categoryId) }}</dd>
-
-            <dt class="col-5">Item</dt>
-            <dd class="col-7">{{ item.checkingItemName }}</dd>
-
-            <dt class="col-5">Criteria</dt>
-            <dd class="col-7">{{ item.evaluationCriteria }}</dd>
-
-            <dt class="col-5">Max Score</dt>
-            <dd class="col-7">{{ item.maxScore }}</dd>
-
-            <dt class="col-5">Order</dt>
-            <dd class="col-7">{{ item.order }}</dd>
+            <dt class="col-sm-3">Order</dt>
+            <dd class="col-sm-9">{{ item.order }}</dd>
           </dl>
-        }
-      </div>
-    </div>
-  </div>
+        </section>
+      } @else {
+        <section class="modal-panel">
+          <form [formGroup]="checklistForm" (ngSubmit)="saveChecklist()" class="row g-3" novalidate>
+            <div class="col-12 col-lg-6">
+              <label for="categoryId" class="form-label">Checklist Category</label>
+              <select id="categoryId" class="form-select" formControlName="categoryId">
+                <option [ngValue]="0" disabled>Select category</option>
+                @for (category of categories(); track category.id) {
+                  <option [ngValue]="category.id">{{ category.name }}</option>
+                }
+              </select>
+              @if (checklistForm.controls.categoryId.touched && checklistForm.controls.categoryId.invalid) {
+                <small class="text-danger">Category is required.</small>
+              }
+            </div>
+
+            <div class="col-12 col-lg-6">
+              <label for="checkingItemName" class="form-label">Checking Item Name</label>
+              <input id="checkingItemName" type="text" class="form-control" formControlName="checkingItemName" />
+            </div>
+
+            <div class="col-12">
+              <label for="evaluationCriteria" class="form-label">Evaluation Criteria</label>
+              <textarea id="evaluationCriteria" rows="3" class="form-control" formControlName="evaluationCriteria"></textarea>
+            </div>
+
+            <div class="col-12 col-lg-3">
+              <label for="maxScore" class="form-label">Max Score</label>
+              <input id="maxScore" type="number" min="1" class="form-control" formControlName="maxScore" />
+            </div>
+
+            <div class="col-12 col-lg-3">
+              <label for="order" class="form-label">Order</label>
+              <input id="order" type="number" min="1" class="form-control" formControlName="order" />
+            </div>
+
+            <div class="col-12 d-flex gap-2 flex-wrap">
+              <button type="submit" class="btn btn-primary" [disabled]="isSaving()">
+                @if (editingChecklistId()) {
+                  Update Item
+                } @else {
+                  Create Item
+                }
+              </button>
+              <button type="button" class="btn btn-outline-secondary" (click)="resetForm()">Clear</button>
+            </div>
+          </form>
+        </section>
+      }
+    </app-fullscreen-modal>
+  }
 </section>

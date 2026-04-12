@@ -11,4 +11,18 @@ import { DashboardTwoRecentAuditDto } from '../../../core/models/dashboard-two.m
 })
 export class RecentAuditsComponent {
   readonly audits = input<DashboardTwoRecentAuditDto[]>([]);
+
+  viewAudit(index: number): void {
+    console.log('View audit:', index);
+  }
+
+  deleteAudit(index: number): void {
+    if (confirm('Are you sure you want to delete this audit?')) {
+      console.log('Delete audit:', index);
+    }
+  }
+
+  downloadAuditPdf(index: number): void {
+    console.log('Download PDF for audit:', index);
+  }
 }

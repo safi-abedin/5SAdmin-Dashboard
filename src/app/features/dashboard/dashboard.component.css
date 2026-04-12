@@ -1,5 +1,5 @@
 :host {
-  --bg: radial-gradient(circle at 10% 5%, #f8fff4 0%, #f4f9ff 40%, #f6f8fb 100%);
+  --bg: radial-gradient(circle at 10% 5%, #f6f6f6 0%, #ffffff 40%, #ffffff 100%);
   --surface: #ffffff;
   --surface-soft: #f5f8fb;
   --text: #112035;
@@ -81,7 +81,14 @@
   grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
   gap: 0.7rem;
   align-items: end;
-  box-shadow: var(--shadow);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+  margin-bottom: 1rem;
+}
+
+.filters-panel.compact {
+  grid-template-columns: auto 1fr;
+  align-items: center;
+  margin-bottom: 0.8rem;
 }
 
 .field {
@@ -124,12 +131,34 @@
   align-items: end;
   justify-content: space-between;
   gap: 0.5rem;
+  margin-bottom: 1rem;
+}
+
+.panel-header h2 {
+  margin: 0;
+  font-size: 1.25rem;
+  color: var(--text);
+}
+
+.panel-header p {
+  margin: 0;
+  color: var(--muted);
+  font-size: 0.85rem;
+}
+
+.panel {
+  background: var(--surface);
+  border-radius: 1rem;
+  padding: 1rem;
+  border: 1px solid var(--border);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
 }
 
 .kpi-grid {
   display: grid;
   gap: 0.8rem;
   grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  margin-bottom: 1rem;
 }
 
 .kpi-card {
@@ -137,6 +166,14 @@
   border: 1px solid var(--border);
   border-radius: 0.9rem;
   padding: 0.9rem;
+  margin-top: 0;
+  margin-bottom: 0;
+  transition: all 0.3s ease;
+}
+
+.kpi-card:hover {
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+  transform: translateY(-2px);
 }
 
 .kpi-card p {
@@ -159,6 +196,21 @@
   display: grid;
   gap: 0.8rem;
   grid-template-columns: repeat(auto-fit, minmax(270px, 1fr));
+  margin-bottom: 1rem;
+}
+
+.content-grid.three-up {
+  display: grid;
+  gap: 0.8rem;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  margin-bottom: 1rem;
+}
+
+.content-grid.four-up {
+  display: grid;
+  gap: 0.8rem;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  margin-bottom: 1rem;
 }
 
 .analysis-card {
@@ -166,6 +218,33 @@
   border: 1px solid var(--border);
   border-radius: 0.9rem;
   padding: 0.9rem;
+  margin-bottom: 1rem;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+  transition: all 0.3s ease;
+}
+
+.analysis-card:hover {
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+}
+
+.analysis-card h3 {
+  margin-top: 0;
+  margin-bottom: 0.75rem;
+  font-size: 1rem;
+}
+
+.chart-card {
+  min-height: 270px;
+}
+
+.chart-host {
+  position: relative;
+  width: 100%;
+  height: 220px;
+}
+
+.chart-host.line-host {
+  height: 280px;
 }
 
 .meter-list {
@@ -263,28 +342,114 @@
   overflow-x: auto;
 }
 
+.table-card {
+  padding: 0.9rem;
+  margin-bottom: 1rem;
+}
+
+.table-card h3 {
+  margin-top: 0;
+  margin-bottom: 0.75rem;
+  font-size: 1rem;
+}
+
 table {
   width: 100%;
   border-collapse: collapse;
+  min-width: 760px;
 }
 
 thead th {
   text-align: left;
   font-size: 0.8rem;
   color: var(--muted);
-  border-bottom: 1px solid #e2e8f0;
-  padding: 0.55rem;
+  font-weight: 700;
+  padding: 0.65rem;
+  border-bottom: 2px solid var(--border);
+  background: var(--surface-soft);
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+}
+
+tbody tr {
+  border-bottom: 1px solid #eef2f7;
+  transition: background-color 0.2s ease;
+}
+
+tbody tr:hover {
+  background: var(--surface-soft);
 }
 
 tbody td {
-  padding: 0.55rem;
-  border-bottom: 1px solid #eef2f7;
+  padding: 0.65rem;
+  color: var(--text);
   font-size: 0.9rem;
+}
+
+tbody tr:last-child {
+  border-bottom: none;
 }
 
 .empty-cell {
   text-align: center;
   color: var(--muted);
+  padding: 1rem !important;
+  font-style: italic;
+}
+
+.actions-col {
+  width: 180px;
+  text-align: center;
+}
+
+.actions-cell {
+  display: flex;
+  gap: 0.35rem;
+  justify-content: center;
+  padding: 0.4rem 0.55rem;
+}
+
+.action-btn {
+  border: none;
+  border-radius: 0.4rem;
+  padding: 0.4rem 0.65rem;
+  font-size: 0.75rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  white-space: nowrap;
+}
+
+.action-btn:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.12);
+}
+
+.action-btn.view-btn {
+  background: #0d6efd;
+  color: white;
+}
+
+.action-btn.view-btn:hover {
+  background: #0d63d6;
+}
+
+.action-btn.pdf-btn {
+  background: #6366f1;
+  color: white;
+}
+
+.action-btn.pdf-btn:hover {
+  background: #4f46e5;
+}
+
+.action-btn.delete-btn {
+  background: #dc2626;
+  color: white;
+}
+
+.action-btn.delete-btn:hover {
+  background: #b91c1c;
 }
 
 .alert-box {
@@ -306,6 +471,15 @@ tbody td {
 @media (max-width: 720px) {
   .dashboard-shell {
     padding: 0.85rem;
+    gap: 0.75rem;
+  }
+
+  .dashboard-header {
+    padding: 1rem;
+  }
+
+  .dashboard-header h1 {
+    font-size: clamp(1.1rem, 1.8vw, 1.5rem);
   }
 
   .field.grow {
@@ -314,5 +488,168 @@ tbody td {
 
   .sentiment-wrap {
     grid-template-columns: 1fr;
+  }
+
+  .content-grid.three-up {
+    grid-template-columns: 1fr;
+  }
+
+  .content-grid.two-up {
+    grid-template-columns: 1fr;
+  }
+
+  .content-grid.four-up {
+    grid-template-columns: 1fr;
+  }
+
+  .kpi-grid {
+    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+    gap: 0.6rem;
+    margin-bottom: 0.8rem;
+  }
+
+  .kpi-card {
+    padding: 0.7rem;
+  }
+
+  .kpi-card h3 {
+    font-size: 1.2rem;
+  }
+
+  .analysis-card {
+    padding: 0.7rem;
+    margin-bottom: 0.8rem;
+  }
+
+  .analysis-card h3 {
+    font-size: 0.9rem;
+    margin-bottom: 0.5rem;
+  }
+
+  .chart-card {
+    min-height: 250px;
+  }
+
+  .chart-host {
+    height: 200px;
+  }
+
+  .chart-host.line-host {
+    height: 240px;
+  }
+
+  .actions-cell {
+    flex-wrap: wrap;
+    gap: 0.25rem;
+  }
+
+  .action-btn {
+    font-size: 0.67rem;
+    padding: 0.25rem 0.4rem;
+  }
+
+  table {
+    min-width: auto;
+    font-size: 0.85rem;
+  }
+
+  thead th {
+    padding: 0.5rem;
+    font-size: 0.75rem;
+  }
+
+  tbody td {
+    padding: 0.5rem;
+    font-size: 0.85rem;
+  }
+
+  .trend-bars {
+    min-height: 150px;
+    gap: 0.2rem;
+  }
+
+  .zone-list li {
+    padding: 0.5rem 0.6rem;
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .meter-list {
+    gap: 0.5rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .dashboard-shell {
+    padding: 0.6rem;
+    gap: 0.5rem;
+  }
+
+  .filters-panel {
+    padding: 0.6rem;
+    grid-template-columns: 1fr;
+    gap: 0.5rem;
+  }
+
+  .view-switch {
+    width: 100%;
+    justify-content: flex-start;
+  }
+
+  .kpi-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .kpi-card {
+    padding: 0.6rem;
+  }
+
+  .kpi-card h3 {
+    font-size: 1rem;
+  }
+
+  .analysis-card {
+    padding: 0.6rem;
+  }
+
+  .chart-card {
+    min-height: 200px;
+  }
+
+  .chart-host {
+    height: 170px;
+  }
+
+  .refresh-btn {
+    width: 100%;
+    padding: 0.5rem;
+  }
+
+  .sentiment-card {
+    padding: 0.5rem;
+    font-size: 0.8rem;
+  }
+
+  table {
+    font-size: 0.8rem;
+  }
+
+  thead th {
+    padding: 0.4rem;
+    font-size: 0.7rem;
+  }
+
+  tbody td {
+    padding: 0.4rem;
+    font-size: 0.8rem;
+  }
+
+  .actions-cell {
+    gap: 0.2rem;
+  }
+
+  .action-btn {
+    font-size: 0.6rem;
+    padding: 0.2rem 0.3rem;
   }
 }

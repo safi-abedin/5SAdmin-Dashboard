@@ -1,5 +1,11 @@
 import { PagedResponse } from './pagination.model';
 
+export enum RedTagStatus {
+  Open = 1,
+  InProgress = 2,
+  Closed = 3
+}
+
 export interface RedTagResponseDto {
   id: number;
   itemName: string;
@@ -8,10 +14,26 @@ export interface RedTagResponseDto {
   location: string;
   photoUrl: string[];
   responsiblePerson: string;
-  status: string;
+  status: string | number;
   identifiedDate: string;
   closingDate: string | null;
   createdAt: string;
+}
+
+export interface CreateRedTagDto {
+  itemName: string;
+  description: string;
+  quantity: number;
+  location: string;
+  photos: File[];
+  responsiblePerson: string;
+  status: RedTagStatus;
+  identifiedDate: string | null;
+  closingDate: string | null;
+}
+
+export interface UpdateRedTagDto extends CreateRedTagDto {
+  id: number;
 }
 
 export interface RedTagPaginationRequest {

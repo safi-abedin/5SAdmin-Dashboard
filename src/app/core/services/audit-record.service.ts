@@ -19,6 +19,14 @@ export class AuditRecordService {
     return this.api.get<AuditResponseDto>(`audit/${id}`);
   }
 
+  getPdf(id: number): Observable<Blob> {
+    return this.api.getBlob(`audit/${id}/pdf`);
+  }
+
+  delete(id: number): Observable<void> {
+    return this.api.post<void>('audit/delete', id);
+  }
+
   private toQuery(
     request: AuditPaginationRequest
   ): Record<string, string | number | boolean | null | undefined> {

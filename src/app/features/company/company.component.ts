@@ -4,12 +4,13 @@ import { finalize } from 'rxjs/operators';
 import { CompanyDto, CreateCompanyDto, UpdateCompanyDto } from '../../core/models/company.model';
 import { CompanyService } from '../../core/services/company.service';
 import { ToastService } from '../../core/services/toast.service';
+import { FullscreenModalComponent } from '../../shared/components/fullscreen-modal/fullscreen-modal.component';
 import { TableComponent } from '../../shared/components/table/table.component';
 import { TableColumn, TableRow } from '../../shared/components/table/table.model';
 
 @Component({
   selector: 'app-company',
-  imports: [ReactiveFormsModule, TableComponent],
+  imports: [ReactiveFormsModule, TableComponent, FullscreenModalComponent],
   templateUrl: './company.component.html',
   styleUrl: './company.component.css',
   changeDetection: ChangeDetectionStrategy.OnPush
@@ -36,6 +37,9 @@ export class CompanyComponent {
 
   protected readonly selectedCompany = signal<CompanyDto | null>(null);
   protected readonly editingCompanyId = signal<number | null>(null);
+  protected readonly modalMode = signal<'create' | 'edit' | 'view' | null>(null);
+
+  protected readonly isModalOpen = computed(() => this.modalMode() !== null);
 
   protected readonly rows = computed<TableRow[]>(() =>
     this.companies().map((company) => ({
@@ -48,9 +52,7 @@ export class CompanyComponent {
     }))
   );
 
-  protected readonly formTitle = computed(() =>
-    this.editingCompanyId() ? 'Update Company' : 'Create Company'
-  );
+  protected readonly formTitle = computed(() => (this.editingCompanyId() ? 'Update Company' : 'Create Company'));
 
   protected readonly companyForm = new FormGroup({
     companyName: new FormControl('', { nonNullable: true, validators: [Validators.required] }),
@@ -101,7 +103,7 @@ export class CompanyComponent {
         .subscribe({
           next: () => {
             this.toastService.success('Company updated successfully.');
-            this.resetForm();
+            this.closeModal();
             this.loadCompanies();
           },
           error: () => {
@@ -118,7 +120,7 @@ export class CompanyComponent {
       .subscribe({
         next: () => {
           this.toastService.success('Company created successfully.');
-          this.resetForm();
+          this.closeModal();
           this.currentPage.set(1);
           this.loadCompanies();
         },
@@ -138,7 +140,7 @@ export class CompanyComponent {
     this.companyService.getById(id).subscribe({
       next: (company) => {
         this.selectedCompany.set(company);
-        this.toastService.info(`Viewing company: ${company.companyName}`);
+        this.modalMode.set('view');
       },
       error: () => {
         this.toastService.error('Unable to load company details.');
@@ -157,6 +159,7 @@ export class CompanyComponent {
       next: (company) => {
         this.editingCompanyId.set(company.id);
         this.selectedCompany.set(company);
+        this.modalMode.set('edit');
         this.companyForm.setValue({
           companyName: company.companyName,
           companyCode: company.companyCode,
@@ -202,6 +205,16 @@ export class CompanyComponent {
       email: '',
       phone: ''
     });
+  }
+
+  protected openCreateModal(): void {
+    this.resetForm();
+    this.modalMode.set('create');
+  }
+
+  protected closeModal(): void {
+    this.modalMode.set(null);
+    this.resetForm();
   }
 
   private loadCompanies(): void {

@@ -1,0 +1,49 @@
+<section class="my-profile-page">
+  <header class="profile-hero">
+    <h1>My Profile</h1>
+    <p class="subtitle">View your account identity, role, and organization details in a refined workspace.</p>
+  </header>
+
+  @if (isLoading()) {
+    <section class="state-card" role="status" aria-live="polite">Loading profile...</section>
+  }
+
+  @if (!isLoading() && profile(); as data) {
+    <section class="profile-grid">
+      <article class="card profile-card" aria-label="Account details">
+        <h2>Identity Snapshot</h2>
+        <div class="chip-grid">
+          <article><span>Full Name</span><strong>{{ data.name }}</strong></article>
+          <article><span>Username</span><strong>{{ data.userName }}</strong></article>
+          <article><span>Role</span><strong>{{ data.role }}</strong></article>
+          <article><span>Email</span><strong>{{ data.email || 'Not available' }}</strong></article>
+          <article><span>Phone</span><strong>{{ data.phone || 'Not available' }}</strong></article>
+        </div>
+      </article>
+
+      <article class="card profile-card" aria-label="Organization details">
+        <h2>Organization</h2>
+
+        <div class="chip-grid">
+          <article><span>Company</span><strong>{{ data.companyName || 'Not assigned' }}</strong></article>
+          <article><span>Company Id</span><strong>{{ data.companyId || 'Not assigned' }}</strong></article>
+        </div>
+
+        <div class="address-card">
+          <h3>Address</h3>
+          <p>{{ data.companyAddress || 'Not available' }}</p>
+        </div>
+
+        @if (data.companyLogoUrl) {
+          <button type="button" class="logo-wrap" (click)="openImageViewer(data.companyLogoUrl)">
+            <img [src]="data.companyLogoUrl" alt="Company logo" />
+          </button>
+        }
+      </article>
+    </section>
+  }
+
+  @if (selectedImage(); as imageSrc) {
+    <app-image-viewer [src]="imageSrc" alt="Company logo" (close)="closeImageViewer()" />
+  }
+</section>

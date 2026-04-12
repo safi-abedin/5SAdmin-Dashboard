@@ -1,0 +1,39 @@
+:host {
+  display: contents;
+}
+
+.img-viewer {
+  position: fixed;
+  inset: 0;
+  z-index: 1500;
+}
+
+.img-viewer-backdrop {
+  position: absolute;
+  inset: 0;
+  border: 0;
+  background: rgb(2 8 23 / 0.82);
+}
+
+.img-viewer-shell {
+  position: relative;
+  height: 100vh;
+  width: 100vw;
+  display: grid;
+  place-items: center;
+  padding: 1rem;
+}
+
+.img-viewer-shell img {
+  max-width: 96vw;
+  max-height: 88vh;
+  object-fit: contain;
+  border-radius: 0.8rem;
+  box-shadow: 0 24px 60px rgb(0 0 0 / 0.45);
+}
+
+.close-btn {
+  position: absolute;
+  top: 1rem;
+  right: 1rem;
+}

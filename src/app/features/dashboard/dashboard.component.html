@@ -81,6 +81,7 @@
       }
 
       @if (!isCompanyLoading() && analytics(); as companyData) {
+        <!-- KPI Grid - Professional Layout -->
         <section class="kpi-grid" aria-label="Key performance indicators">
           <article class="kpi-card">
             <p>Total Audits</p>
@@ -104,148 +105,104 @@
           </article>
         </section>
 
-        <section class="content-grid two-up">
-          <article class="analysis-card">
-            <h3>Audit Status Breakdown</h3>
-            <ul class="meter-list">
-              @for (item of companyData.auditStatusBreakdown; track item.status) {
-                <li>
-                  <div class="meter-head">
-                    <span>{{ item.status }}</span>
-                    <strong>{{ item.count }}</strong>
-                  </div>
-                  <div class="meter-track">
-                    <div
-                      class="meter-fill"
-                      [style.width.%]="(item.count / maxCountFromStatus(companyData.auditStatusBreakdown)) * 100"
-                    ></div>
-                  </div>
-                </li>
-              }
-            </ul>
-          </article>
+        <!-- Primary Charts Grid (3-column layout) -->
+        <section class="content-grid three-up">
+          <article class="analysis-card chart-card">
+              <h3>Red Tag Status Distribution</h3>
+              <div class="chart-host">
+                <canvas #redTagStatusChart aria-label="Company red tag status chart"></canvas>
+              </div>
+            </article>
 
-          <article class="analysis-card">
-            <h3>Red Tag Status Breakdown</h3>
-            <ul class="meter-list red">
-              @for (item of companyData.redTagStatusBreakdown; track item.status) {
-                <li>
-                  <div class="meter-head">
-                    <span>{{ item.status }}</span>
-                    <strong>{{ item.count }}</strong>
-                  </div>
-                  <div class="meter-track">
-                    <div
-                      class="meter-fill"
-                      [style.width.%]="(item.count / maxCountFromStatus(companyData.redTagStatusBreakdown)) * 100"
-                    ></div>
-                  </div>
-                </li>
-              }
-            </ul>
-          </article>
-        </section>
 
-        <section class="content-grid two-up">
-          <article class="analysis-card">
-            <h3>Daily Audit Trend</h3>
-            <div class="trend-bars" role="img" aria-label="Daily audit trend bars">
-              @for (point of companyData.dailyAuditTrend; track point.label) {
-                <div class="trend-item">
-                  <div
-                    class="trend-bar"
-                    [style.height.%]="(point.count / maxCountFromTrend(companyData.dailyAuditTrend)) * 100"
-                  ></div>
-                  <span>{{ point.label }}</span>
-                </div>
-              }
+          <article class="analysis-card chart-card">
+            <h3>Audit Status Distribution</h3>
+            <div class="chart-host">
+              <canvas #companyStatusChart aria-label="Company audit status chart"></canvas>
             </div>
           </article>
 
-          <article class="analysis-card">
-            <h3>Zone Performance</h3>
-            <ul class="zone-list">
-              @for (zone of companyData.zonePerformance; track zone.zoneId) {
-                <li>
-                  <div>
-                    <strong>{{ zone.zoneName }}</strong>
-                    <small>{{ zone.auditCount }} audits</small>
-                  </div>
-                  <div class="score">
-                    {{ zone.averagePercentage | number: '1.0-2' }}%
-                  </div>
-                </li>
-              }
-            </ul>
-          </article>
-        </section>
-
-        <section class="content-grid two-up">
-          <article class="analysis-card">
-            <h3>Department Insights</h3>
-            <ul class="zone-list">
-              @for (item of companyData.departmentInsights; track item.department) {
-                <li>
-                  <div>
-                    <strong>{{ item.department }}</strong>
-                    <small>{{ item.auditCount }} audits</small>
-                  </div>
-                  <div class="score">
-                    {{ item.averagePercentage | number: '1.0-2' }}%
-                  </div>
-                </li>
-              }
-            </ul>
-          </article>
-
-          <article class="analysis-card">
+  
+          <article class="analysis-card chart-card">
             <h3>Feedback Sentiment</h3>
-            <div class="sentiment-wrap">
-              <div class="sentiment-card good">
-                <p>Positive</p>
-                <strong>{{ companyData.feedbackSentiment.goodCount }}</strong>
-                <small>{{ feedbackGoodRate() | number: '1.0-1' }}%</small>
-              </div>
-              <div class="sentiment-card bad">
-                <p>Negative</p>
-                <strong>{{ companyData.feedbackSentiment.badCount }}</strong>
-                <small>{{ feedbackBadRate() | number: '1.0-1' }}%</small>
-              </div>
+            <div class="chart-host">
+              <canvas #feedbackSentimentChart aria-label="Feedback sentiment chart"></canvas>
             </div>
           </article>
         </section>
 
-        <section class="analysis-card table-card">
-          <h3>Recent Low Performance Audits</h3>
-          <div class="table-wrap">
-            <table>
-              <thead>
-                <tr>
-                  <th>Audit ID</th>
-                  <th>Zone ID</th>
-                  <th>Date</th>
-                  <th>Score</th>
-                  <th>Status</th>
-                </tr>
-              </thead>
-              <tbody>
-                @for (row of companyData.recentLowPerformanceAudits; track row.id) {
-                  <tr>
-                    <td>#{{ row.id }}</td>
-                    <td>{{ row.zoneId }}</td>
-                    <td>{{ row.auditDate | date: 'mediumDate' }}</td>
-                    <td>{{ row.percentage | number: '1.0-2' }}%</td>
-                    <td>{{ row.status }}</td>
-                  </tr>
-                } @empty {
-                  <tr>
-                    <td colspan="5" class="empty-cell">No low-performance audits found.</td>
-                  </tr>
-                }
-              </tbody>
-            </table>
-          </div>
+        <!-- Secondary Charts Grid (4-column) -->
+        <section class="content-grid three-up">
+
+
+          <article class="analysis-card chart-card">
+            <h3>Department Insights</h3>
+            <div class="chart-host">
+              <canvas #departmentInsightsChart aria-label="Department insights chart"></canvas>
+            </div>
+          </article>
+
+          <article class="analysis-card chart-card">
+            <h3>Recent Low Performance</h3>
+            <div class="chart-host">
+              <canvas #lowPerformanceChart aria-label="Recent low performance chart"></canvas>
+            </div>
+          </article>
+
+          <article class="analysis-card chart-card">
+            <h3>Zone Performance</h3>
+            <div class="chart-host">
+              <canvas #zonePerformanceChart aria-label="Zone performance chart"></canvas>
+            </div>
+          </article>
+
+          
+          <article class="analysis-card">
+            <h3>Score Band Distribution</h3>
+            <ul class="meter-list">
+              @for (item of companyData.scoreBandInsights; track item.band) {
+                <li>
+                  <div class="meter-head">
+                    <span>{{ item.band }}</span>
+                    <strong>{{ item.count }}</strong>
+                  </div>
+                  <div class="meter-track">
+                    <div
+                      class="meter-fill"
+                      [style.width.%]="(item.count / maxCountFromArray(companyData.scoreBandInsights)) * 100"
+                    ></div>
+                  </div>
+                </li>
+              }
+            </ul>
+          </article>
         </section>
+
+
+
+        <!-- Additional Insights Grid -->
+        <section class="content-grid two-up">
+          <article class="analysis-card chart-card" style="grid-column: 1 / -1">
+            <h3>Daily Audit Trend</h3>
+            <div class="chart-host line-host">
+              <canvas #companyTrendChart aria-label="Company daily audit trend chart"></canvas>
+            </div>
+          </article>
+        </section>
+
+        <!-- <app-table
+          title="Recent Low Performance Audits"
+          [columns]="lowPerformanceColumns"
+          [data]="lowPerformanceRows()"
+          [totalItems]="lowPerformanceRows().length"
+          [showViewAction]="true"
+          [showEditAction]="false"
+          [showDeleteAction]="true"
+          extraActionLabel="PDF"
+          (view)="viewAudit($event)"
+          (delete)="deleteAudit($event)"
+          (extraAction)="downloadAuditPdf($event)"
+        ></app-table> -->
       }
     </section>
   }
@@ -266,37 +223,20 @@
       <section class="filters-panel compact" aria-label="Auditor filters">
         <label class="field grow">
           <span>Auditor</span>
-          <select
-            [value]="selectedAuditorId() ?? ''"
-            (change)="onAuditorChange(auditor.value)"
-            #auditor
-          >
-            <option value="" [disabled]="isAuditorListLoading()">Choose an auditor</option>
-            @for (user of auditors(); track user.id) {
-              <option [value]="user.id">{{ user.name }} ({{ user.username }})</option>
+          <select [value]="selectedAuditorId() ?? ''" (change)="onAuditorChange(auditorSelect.value)" #auditorSelect>
+            @for (auditor of auditors(); track auditor.id) {
+              <option [value]="auditor.id">{{ auditor.name }} ({{ auditor.username }})</option>
             }
           </select>
         </label>
-
-        <button type="button" class="refresh-btn" (click)="refreshAuditorAnalytics()">
-          Refresh Auditor Data
-        </button>
       </section>
 
-      @if (auditorError()) {
-        <div class="alert-box" role="alert">{{ auditorError() }}</div>
-      }
-
-      @if (isAuditorLoading()) {
-        <div class="loading-card" role="status" aria-live="polite">Loading auditor analytics...</div>
-      }
-
       @if (!isAuditorLoading() && auditorAnalytics(); as auditorData) {
-        <section class="kpi-grid" aria-label="Auditor KPI cards">
+        <section class="kpi-grid">
           <article class="kpi-card">
             <p>Auditor</p>
             <h3>{{ auditorData.userName }}</h3>
-            <small>User ID: {{ auditorData.userId }}</small>
+            <small>Performance Profile</small>
           </article>
           <article class="kpi-card">
             <p>Total Audits</p>
@@ -306,7 +246,7 @@
           <article class="kpi-card">
             <p>Average Score</p>
             <h3>{{ auditorData.averageAuditPercentage | number: '1.0-2' }}%</h3>
-            <small>Company ID: {{ auditorData.companyId }}</small>
+            <small>Period baseline</small>
           </article>
           <article class="kpi-card danger">
             <p>Open Red Tags</p>
@@ -316,90 +256,45 @@
         </section>
 
         <section class="content-grid two-up">
-          <article class="analysis-card">
-            <h3>Audit Status Breakdown</h3>
-            <ul class="meter-list">
-              @for (item of auditorData.auditStatusBreakdown; track item.status) {
-                <li>
-                  <div class="meter-head">
-                    <span>{{ item.status }}</span>
-                    <strong>{{ item.count }}</strong>
-                  </div>
-                  <div class="meter-track">
-                    <div
-                      class="meter-fill"
-                      [style.width.%]="(item.count / maxCountFromStatus(auditorData.auditStatusBreakdown)) * 100"
-                    ></div>
-                  </div>
-                </li>
-              }
-            </ul>
+          <article class="analysis-card chart-card">
+            <h3>Auditor Status Distribution</h3>
+            <div class="chart-host">
+              <canvas #auditorStatusChart aria-label="Auditor status chart"></canvas>
+            </div>
           </article>
 
-          <article class="analysis-card">
-            <h3>Monthly Audit Trend</h3>
-            <div class="trend-bars" role="img" aria-label="Monthly audit trend bars">
-              @for (point of auditorData.monthlyAuditTrend; track point.label) {
-                <div class="trend-item">
-                  <div
-                    class="trend-bar"
-                    [style.height.%]="(point.count / maxCountFromTrend(auditorData.monthlyAuditTrend)) * 100"
-                  ></div>
-                  <span>{{ point.label }}</span>
-                </div>
-              }
+          <article class="analysis-card chart-card">
+            <h3>Monthly Trend</h3>
+            <div class="chart-host">
+              <canvas #auditorTrendChart aria-label="Auditor trend chart"></canvas>
             </div>
           </article>
         </section>
 
-        <section class="analysis-card table-card">
-          <h3>Recent Audits</h3>
-          <div class="table-wrap">
-            <table>
-              <thead>
-                <tr>
-                  <th>Audit ID</th>
-                  <th>Zone ID</th>
-                  <th>Date</th>
-                  <th>Score</th>
-                  <th>Status</th>
-                </tr>
-              </thead>
-              <tbody>
-                @for (row of auditorData.recentAudits; track row.id) {
-                  <tr>
-                    <td>#{{ row.id }}</td>
-                    <td>{{ row.zoneId }}</td>
-                    <td>{{ row.auditDate | date: 'mediumDate' }}</td>
-                    <td>{{ row.percentage | number: '1.0-2' }}%</td>
-                    <td>{{ row.status }}</td>
-                  </tr>
-                } @empty {
-                  <tr>
-                    <td colspan="5" class="empty-cell">No recent audits found.</td>
-                  </tr>
-                }
-              </tbody>
-            </table>
-          </div>
+        <section class="content-grid two-up">
+
+
+          <article class="analysis-card chart-card">
+            <h3>Zone Insights</h3>
+            <div class="chart-host">
+              <canvas #zoneInsightsChart aria-label="Zone insights chart"></canvas>
+            </div>
+          </article>
         </section>
 
-        <section class="analysis-card">
-          <h3>Zone Insights</h3>
-          <ul class="zone-list">
-            @for (zone of auditorData.zoneInsights; track zone.zoneId) {
-              <li>
-                <div>
-                  <strong>{{ zone.zoneName }}</strong>
-                  <small>{{ zone.auditCount }} audits</small>
-                </div>
-                <div class="score">{{ zone.averagePercentage | number: '1.0-2' }}%</div>
-              </li>
-            } @empty {
-              <li class="empty-cell">No zone insights available.</li>
-            }
-          </ul>
-        </section>
+        <!-- <app-table
+          title="Recent Audits"
+          [columns]="auditorAuditColumns"
+          [data]="auditorRecentRows()"
+          [totalItems]="auditorRecentRows().length"
+          [showViewAction]="true"
+          [showEditAction]="false"
+          [showDeleteAction]="true"
+          extraActionLabel="PDF"
+          (view)="viewAudit($event)"
+          (delete)="deleteAudit($event)"
+          (extraAction)="downloadAuditPdf($event)"
+        ></app-table> -->
       }
     </section>
   }

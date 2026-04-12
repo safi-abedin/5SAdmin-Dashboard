@@ -1,0 +1,8 @@
+<section class="img-viewer" role="dialog" aria-modal="true" aria-label="Image viewer">
+  <button type="button" class="img-viewer-backdrop" (click)="onClose()" aria-label="Close image viewer"></button>
+
+  <article class="img-viewer-shell">
+    <button type="button" class="btn btn-light btn-sm close-btn" (click)="onClose()">Close</button>
+    <img [src]="src()" [alt]="alt()" />
+  </article>
+</section>

@@ -8,6 +8,7 @@ export interface TableColumn {
   sortable?: boolean;
   width?: string;
   align?: TableCellAlign;
+  toneMap?: Record<string, string>;
 }
 
 export interface TableRow {

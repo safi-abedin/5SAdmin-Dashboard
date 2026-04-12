@@ -4,12 +4,13 @@ import { finalize } from 'rxjs/operators';
 import { CreateZoneDto, UpdateZoneDto, ZoneDto } from '../../core/models/zone.model';
 import { ToastService } from '../../core/services/toast.service';
 import { ZoneService } from '../../core/services/zone.service';
+import { FullscreenModalComponent } from '../../shared/components/fullscreen-modal/fullscreen-modal.component';
 import { TableComponent } from '../../shared/components/table/table.component';
 import { TableColumn, TableRow } from '../../shared/components/table/table.model';
 
 @Component({
   selector: 'app-zone',
-  imports: [ReactiveFormsModule, TableComponent],
+  imports: [ReactiveFormsModule, TableComponent, FullscreenModalComponent],
   templateUrl: './zone.component.html',
   styleUrl: './zone.component.css',
   changeDetection: ChangeDetectionStrategy.OnPush
@@ -32,6 +33,9 @@ export class ZoneComponent {
 
   protected readonly selectedZone = signal<ZoneDto | null>(null);
   protected readonly editingZoneId = signal<number | null>(null);
+  protected readonly modalMode = signal<'create' | 'edit' | 'view' | null>(null);
+
+  protected readonly isModalOpen = computed(() => this.modalMode() !== null);
 
   protected readonly rows = computed<TableRow[]>(() =>
     this.zones().map((zone) => ({
@@ -83,7 +87,7 @@ export class ZoneComponent {
         .subscribe({
           next: () => {
             this.toastService.success('Zone updated successfully.');
-            this.resetForm();
+            this.closeModal();
             this.loadZones();
           },
           error: () => {
@@ -100,7 +104,7 @@ export class ZoneComponent {
       .subscribe({
         next: () => {
           this.toastService.success('Zone created successfully.');
-          this.resetForm();
+          this.closeModal();
           this.currentPage.set(1);
           this.loadZones();
         },
@@ -120,7 +124,7 @@ export class ZoneComponent {
     this.zoneService.getById(id).subscribe({
       next: (zone) => {
         this.selectedZone.set(zone);
-        this.toastService.info(`Viewing zone: ${zone.name}`);
+        this.modalMode.set('view');
       },
       error: () => {
         this.toastService.error('Unable to load zone details.');
@@ -139,6 +143,7 @@ export class ZoneComponent {
       next: (zone) => {
         this.editingZoneId.set(zone.id);
         this.selectedZone.set(zone);
+        this.modalMode.set('edit');
         this.zoneForm.setValue({
           name: zone.name
         });
@@ -176,6 +181,16 @@ export class ZoneComponent {
     this.zoneForm.reset({
       name: ''
     });
+  }
+
+  protected openCreateModal(): void {
+    this.resetForm();
+    this.modalMode.set('create');
+  }
+
+  protected closeModal(): void {
+    this.modalMode.set(null);
+    this.resetForm();
   }
 
   private loadZones(): void {

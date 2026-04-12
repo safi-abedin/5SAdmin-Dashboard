@@ -10,6 +10,9 @@ import {
 import { ChecklistCategoryService } from '../../core/services/checklist-category.service';
 import { ChecklistService } from '../../core/services/checklist.service';
 import { ToastService } from '../../core/services/toast.service';
+import { FullscreenModalComponent } from '../../shared/components/fullscreen-modal/fullscreen-modal.component';
+import { TableComponent } from '../../shared/components/table/table.component';
+import { TableColumn, TableRow } from '../../shared/components/table/table.model';
 
 interface ChecklistGroup {
   categoryId: number;
@@ -19,7 +22,7 @@ interface ChecklistGroup {
 
 @Component({
   selector: 'app-checklist',
-  imports: [ReactiveFormsModule],
+  imports: [ReactiveFormsModule, TableComponent, FullscreenModalComponent],
   templateUrl: './checklist.component.html',
   styleUrl: './checklist.component.css',
   changeDetection: ChangeDetectionStrategy.OnPush
@@ -29,6 +32,14 @@ export class ChecklistComponent {
   private readonly categoryService = inject(ChecklistCategoryService);
   private readonly toastService = inject(ToastService);
 
+  protected readonly columns: TableColumn[] = [
+    { field: 'categoryName', header: 'Category', sortable: true },
+    { field: 'order', header: 'Order', sortable: true, width: '90px', align: 'center' },
+    { field: 'checkingItemName', header: 'Checking Item', sortable: true },
+    { field: 'evaluationCriteria', header: 'Evaluation Criteria' },
+    { field: 'maxScore', header: 'Max Score', sortable: true, width: '110px', align: 'center' }
+  ];
+
   private readonly checklists = signal<ChecklistDto[]>([]);
   protected readonly categories = signal<ChecklistCategoryDto[]>([]);
   protected readonly isTableLoading = signal(false);
@@ -36,7 +47,21 @@ export class ChecklistComponent {
 
   protected readonly selectedChecklist = signal<ChecklistDto | null>(null);
   protected readonly editingChecklistId = signal<number | null>(null);
+  protected readonly modalMode = signal<'create' | 'edit' | 'view' | null>(null);
   protected readonly activeCategoryId = signal<number | null>(null);
+
+  protected readonly isModalOpen = computed(() => this.modalMode() !== null);
+
+  protected readonly rows = computed<TableRow[]>(() =>
+    this.checklists().map((item) => ({
+      id: item.id,
+      categoryName: item.categoryName || this.resolveCategoryName(item.categoryId),
+      order: item.order,
+      checkingItemName: item.checkingItemName,
+      evaluationCriteria: item.evaluationCriteria,
+      maxScore: item.maxScore
+    }))
+  );
 
   protected readonly groupedChecklists = computed<ChecklistGroup[]>(() => {
     const categoryMap = new Map<number, ChecklistGroup>();
@@ -134,7 +159,7 @@ export class ChecklistComponent {
         .subscribe({
           next: () => {
             this.toastService.success('Checklist item updated successfully.');
-            this.resetForm();
+            this.closeModal();
             this.loadChecklists();
           },
           error: () => {
@@ -151,7 +176,7 @@ export class ChecklistComponent {
       .subscribe({
         next: () => {
           this.toastService.success('Checklist item created successfully.');
-          this.resetForm();
+          this.closeModal();
           this.loadChecklists();
         },
         error: () => {
@@ -160,11 +185,17 @@ export class ChecklistComponent {
       });
   }
 
-  protected onView(item: ChecklistDto): void {
-    this.checklistService.getById(item.id).subscribe({
+  protected onView(row: TableRow): void {
+    const id = this.getIdFromRow(row);
+    if (!id) {
+      this.toastService.error('Invalid checklist selection.');
+      return;
+    }
+
+    this.checklistService.getById(id).subscribe({
       next: (item) => {
         this.selectedChecklist.set(item);
-        this.toastService.info(`Viewing checklist item: ${item.checkingItemName}`);
+        this.modalMode.set('view');
       },
       error: () => {
         this.toastService.error('Unable to load checklist item details.');
@@ -172,11 +203,18 @@ export class ChecklistComponent {
     });
   }
 
-  protected onEdit(item: ChecklistDto): void {
-    this.checklistService.getById(item.id).subscribe({
+  protected onEdit(row: TableRow): void {
+    const id = this.getIdFromRow(row);
+    if (!id) {
+      this.toastService.error('Invalid checklist selection.');
+      return;
+    }
+
+    this.checklistService.getById(id).subscribe({
       next: (item) => {
         this.editingChecklistId.set(item.id);
         this.selectedChecklist.set(item);
+        this.modalMode.set('edit');
         this.checklistForm.setValue({
           categoryId: item.categoryId,
           checkingItemName: item.checkingItemName,
@@ -191,11 +229,17 @@ export class ChecklistComponent {
     });
   }
 
-  protected onDelete(item: ChecklistDto): void {
-    this.checklistService.delete(item.id).subscribe({
+  protected onDelete(row: TableRow): void {
+    const id = this.getIdFromRow(row);
+    if (!id) {
+      this.toastService.error('Invalid checklist selection.');
+      return;
+    }
+
+    this.checklistService.delete(id).subscribe({
       next: () => {
         this.toastService.success('Checklist item deleted successfully.');
-        if (this.editingChecklistId() === item.id) {
+        if (this.editingChecklistId() === id) {
           this.resetForm();
         }
         this.loadChecklists();
@@ -229,6 +273,16 @@ export class ChecklistComponent {
     });
   }
 
+  protected openCreateModal(): void {
+    this.resetForm();
+    this.modalMode.set('create');
+  }
+
+  protected closeModal(): void {
+    this.modalMode.set(null);
+    this.resetForm();
+  }
+
   protected trackByCategory(_index: number, group: ChecklistGroup): number {
     return group.categoryId;
   }
@@ -240,6 +294,16 @@ export class ChecklistComponent {
   protected resolveCategoryName(id: number): string {
     const category = this.categories().find((item) => item.id === id);
     return category?.name ?? String(id);
+  }
+
+  private getIdFromRow(row: TableRow): number | null {
+    const raw = row['id'];
+    if (typeof raw === 'number') {
+      return raw;
+    }
+
+    const parsed = Number(raw);
+    return Number.isFinite(parsed) && parsed > 0 ? parsed : null;
   }
 
   private loadCategories(): void {

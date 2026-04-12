@@ -8,6 +8,8 @@ import { TableColumn, TableRow, TableSort, TableSortDirection } from './table.mo
   changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class TableComponent {
+  readonly title = input('Records');
+
   readonly columns = input<readonly TableColumn[]>([]);
   readonly data = input<readonly TableRow[]>([]);
   readonly totalItems = input(0);
@@ -27,9 +29,26 @@ export class TableComponent {
   readonly view = output<TableRow>();
   readonly edit = output<TableRow>();
   readonly delete = output<TableRow>();
+  readonly extraAction = output<TableRow>();
+  readonly primaryAction = output<void>();
+
+  readonly showViewAction = input(true);
+  readonly showEditAction = input(true);
+  readonly showDeleteAction = input(true);
+  readonly extraActionLabel = input<string | null>(null);
+  readonly primaryActionLabel = input<string | null>(null);
+
+  protected readonly hasAnyAction = computed(
+    () =>
+      this.showViewAction() ||
+      this.showEditAction() ||
+      this.showDeleteAction() ||
+      Boolean(this.extraActionLabel())
+  );
 
   protected readonly searchTerm = signal('');
   protected readonly activeSort = signal<TableSort>({ field: '', direction: '' });
+  protected readonly pendingDeleteRow = signal<TableRow | null>(null);
 
   protected readonly totalPages = computed(() => {
     const size = Math.max(1, this.pageSize());
@@ -139,6 +158,38 @@ export class TableComponent {
   protected getSortDirection(column: TableColumn): TableSortDirection {
     const sortState = this.activeSort();
     return sortState.field === column.field ? sortState.direction : '';
+  }
+
+  protected openDeleteConfirm(row: TableRow): void {
+    if (this.isLoading()) {
+      return;
+    }
+
+    this.pendingDeleteRow.set(row);
+  }
+
+  protected closeDeleteConfirm(): void {
+    this.pendingDeleteRow.set(null);
+  }
+
+  protected confirmDelete(): void {
+    const row = this.pendingDeleteRow();
+    if (!row) {
+      return;
+    }
+
+    this.delete.emit(row);
+    this.closeDeleteConfirm();
+  }
+
+  protected getToneClass(column: TableColumn, row: TableRow): string {
+    if (!column.toneMap) {
+      return 'tone-neutral';
+    }
+
+    const value = this.resolvePath(row, column.field);
+    const key = String(value ?? '').trim().toLowerCase();
+    return column.toneMap[key] ?? 'tone-neutral';
   }
 
   private getNextDirection(current: TableSort, field: string): TableSortDirection {

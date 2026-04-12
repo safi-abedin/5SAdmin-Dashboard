@@ -5,3 +5,36 @@
 .zone-page {
   align-items: stretch;
 }
+
+.modal-panel {
+  border: 1px solid #d7e0ea;
+  border-radius: 0.9rem;
+  background: #fff;
+  padding: 1rem;
+  box-shadow: 0 14px 24px rgb(15 23 42 / 0.06);
+}
+
+
+.page-header {
+  background: linear-gradient(135deg, #0f62fe 0%, #1659d2 60%, #123d8f 100%);
+  color: #fff;
+  border-radius: 1rem;
+  padding: 1rem 1.2rem;
+}
+
+.eyebrow {
+  margin: 0;
+  font-size: 0.74rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  opacity: 0.9;
+}
+
+.page-header h1 {
+  margin: 0.2rem 0;
+  font-size: clamp(1.2rem, 2vw, 1.7rem);
+}
+
+.page-header p {
+  margin: 0;
+}

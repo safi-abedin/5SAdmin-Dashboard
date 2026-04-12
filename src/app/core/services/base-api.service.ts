@@ -30,4 +30,8 @@ export class BaseApiService {
   post<T>(path: string, payload: unknown): Observable<T> {
     return this.http.post<T>(`${this.apiUrl}/${path}`, payload);
   }
+
+  getBlob(path: string): Observable<Blob> {
+    return this.http.get(`${this.apiUrl}/${path}`, { responseType: 'blob' });
+  }
 }

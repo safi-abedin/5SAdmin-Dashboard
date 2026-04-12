@@ -55,7 +55,7 @@ export class SidebarComponent {
       allowedRoles: [Role.SUPER_ADMIN, Role.ADMIN]
     },
     {
-      label: 'Profile',
+      label: 'Company',
       route: '/profile',
       allowedRoles: [Role.SUPER_ADMIN, Role.ADMIN]
     },

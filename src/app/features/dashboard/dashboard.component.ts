@@ -1,6 +1,16 @@
-import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
-import { DatePipe, DecimalPipe } from '@angular/common';
+import {
+  ChangeDetectionStrategy,
+  Component,
+  ElementRef,
+  computed,
+  effect,
+  inject,
+  signal,
+  viewChild
+} from '@angular/core';
+import { CommonModule, DatePipe, DecimalPipe } from '@angular/common';
 import { finalize } from 'rxjs/operators';
+import { Chart, ChartConfiguration, registerables } from 'chart.js';
 import {
   AnalyticsAdvancedDashboardDto,
   AuditorDashboardResponseDto,
@@ -15,15 +25,39 @@ import { CompanyService } from '../../core/services/company.service';
 import { DashboardService } from '../../core/services/dashboard.service';
 import { ToastService } from '../../core/services/toast.service';
 import { UserManagementService } from '../../core/services/user-management.service';
+import { TableComponent } from '../../shared/components/table/table.component';
+import { TableColumn, TableRow } from '../../shared/components/table/table.model';
 
 @Component({
   selector: 'app-dashboard',
-  imports: [DatePipe, DecimalPipe],
+  imports: [CommonModule, DatePipe, DecimalPipe],
   templateUrl: './dashboard.component.html',
   styleUrl: './dashboard.component.css',
   changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class DashboardComponent {
+  private readonly companyStatusCanvas = viewChild<ElementRef<HTMLCanvasElement>>('companyStatusChart');
+  private readonly redTagStatusCanvas = viewChild<ElementRef<HTMLCanvasElement>>('redTagStatusChart');
+  private readonly companyTrendCanvas = viewChild<ElementRef<HTMLCanvasElement>>('companyTrendChart');
+  private readonly departmentInsightsCanvas = viewChild<ElementRef<HTMLCanvasElement>>('departmentInsightsChart');
+  private readonly feedbackSentimentCanvas = viewChild<ElementRef<HTMLCanvasElement>>('feedbackSentimentChart');
+  private readonly lowPerformanceCanvas = viewChild<ElementRef<HTMLCanvasElement>>('lowPerformanceChart');
+  private readonly auditorStatusCanvas = viewChild<ElementRef<HTMLCanvasElement>>('auditorStatusChart');
+  private readonly auditorTrendCanvas = viewChild<ElementRef<HTMLCanvasElement>>('auditorTrendChart');
+  private readonly zonePerformanceCanvas = viewChild<ElementRef<HTMLCanvasElement>>('zonePerformanceChart');
+  private readonly zoneInsightsCanvas = viewChild<ElementRef<HTMLCanvasElement>>('zoneInsightsChart');
+
+  private companyStatusChart: Chart | null = null;
+  private redTagStatusChart: Chart | null = null;
+  private companyTrendChart: Chart | null = null;
+  private departmentInsightsChart: Chart | null = null;
+  private feedbackSentimentChart: Chart | null = null;
+  private lowPerformanceChart: Chart | null = null;
+  private auditorStatusChart: Chart | null = null;
+  private auditorTrendChart: Chart | null = null;
+  private zonePerformanceChart: Chart | null = null;
+  private zoneInsightsChart: Chart | null = null;
+
   private readonly authService = inject(AuthService);
   private readonly companyService = inject(CompanyService);
   private readonly userService = inject(UserManagementService);
@@ -35,7 +69,7 @@ export class DashboardComponent {
   protected readonly isSuperAdmin = computed(() => this.role() === Role.SUPER_ADMIN);
 
   protected readonly viewMode = signal<'company' | 'auditor'>('company');
-  protected readonly selectedPeriodDays = signal(90);
+  protected readonly selectedPeriodDays = signal(30);
   protected readonly selectedCompanyId = signal<number | null>(this.authService.getCompanyId());
   protected readonly selectedAuditorId = signal<number | null>(null);
 
@@ -104,7 +138,52 @@ export class DashboardComponent {
     return (feedback.badCount / total) * 100;
   });
 
+  protected readonly lowPerformanceColumns: readonly TableColumn[] = [
+    { field: 'id', header: 'Audit ID', sortable: true, width: '80px' },
+    { field: 'zoneName', header: 'Zone', sortable: true, width: '120px' },
+    { field: 'auditDateLabel', header: 'Date', sortable: true, width: '120px' },
+    { field: 'percentage', header: 'Score', sortable: true, width: '100px', align: 'end' },
+    { field: 'status', header: 'Status', sortable: true, width: '100px' }
+  ];
+
+  protected readonly auditorAuditColumns: readonly TableColumn[] = [
+    { field: 'id', header: 'Audit ID', sortable: true, width: '80px' },
+    { field: 'zoneName', header: 'Zone', sortable: true, width: '120px' },
+    { field: 'auditDateLabel', header: 'Date', sortable: true, width: '120px' },
+    { field: 'percentage', header: 'Score', sortable: true, width: '100px', align: 'end' },
+    { field: 'status', header: 'Status', sortable: true, width: '100px' }
+  ];
+
+  protected readonly lowPerformanceRows = computed<readonly TableRow[]>(() => {
+    const audits = this.analytics()?.recentLowPerformanceAudits ?? [];
+    return audits.map((audit) => ({
+      ...audit,
+      zoneName: this.getZoneName(audit.zoneId),
+      auditDateLabel: new Date(audit.auditDate).toLocaleDateString()
+    }));
+  });
+
+  protected readonly auditorRecentRows = computed<readonly TableRow[]>(() => {
+    const audits = this.auditorAnalytics()?.recentAudits ?? [];
+    return audits.map((audit) => ({
+      ...audit,
+      zoneName: this.getAuditorZoneName(audit.zoneId),
+      auditDateLabel: new Date(audit.auditDate).toLocaleDateString()
+    }));
+  });
+
   constructor() {
+    Chart.register(...registerables);
+    effect(() => {
+      this.analytics();
+      this.renderCompanyCharts();
+    });
+
+    effect(() => {
+      this.auditorAnalytics();
+      this.renderAuditorCharts();
+    });
+
     this.bootstrap();
   }
 
@@ -155,6 +234,43 @@ export class DashboardComponent {
     this.loadAuditorAnalytics();
   }
 
+  protected viewAudit(row: TableRow): void {
+    // Navigate to audit detail view
+    console.log('View audit:', this.extractAuditId(row));
+  }
+
+  protected deleteAudit(row: TableRow): void {
+    const auditId = this.extractAuditId(row);
+    if (confirm('Are you sure you want to delete this audit?')) {
+      console.log('Delete audit:', auditId);
+    }
+  }
+
+  protected downloadAuditPdf(row: TableRow): void {
+    console.log('Download PDF for audit:', this.extractAuditId(row));
+  }
+
+  private extractAuditId(row: TableRow): number {
+    const value = row['id'];
+    return typeof value === 'number' ? value : Number(value ?? 0);
+  }
+
+  protected getZoneName(zoneId: number): string {
+    const data = this.analytics();
+    if (!data) return `Zone ${zoneId}`;
+    
+    const zone = data.zonePerformance?.find(z => z.zoneId === zoneId);
+    return zone?.zoneName ?? `Zone ${zoneId}`;
+  }
+
+  protected getAuditorZoneName(zoneId: number): string {
+    const data = this.auditorAnalytics();
+    if (!data) return `Zone ${zoneId}`;
+    
+    const zone = data.zoneInsights?.find(z => z.zoneId === zoneId);
+    return zone?.zoneName ?? `Zone ${zoneId}`;
+  }
+
   protected maxCountFromTrend(trend: DashboardTrendPointDto[] | undefined): number {
     if (!trend || trend.length === 0) {
       return 1;
@@ -177,6 +293,14 @@ export class DashboardComponent {
     }
 
     return Math.max(1, ...values.map((item) => item.auditCount));
+  }
+
+  protected maxCountFromArray(values: any[] | undefined): number {
+    if (!values || values.length === 0) {
+      return 1;
+    }
+
+    return Math.max(1, ...values.map((item) => item.count ?? 0));
   }
 
   private bootstrap(): void {
@@ -308,5 +432,294 @@ export class DashboardComponent {
   private findStatusCount(values: DashboardStatusCountDto[], targetStatus: string): number {
     const match = values.find((item) => item.status.trim().toLowerCase() === targetStatus);
     return match?.count ?? 0;
+  }
+
+  private renderCompanyCharts(): void {
+    const data = this.analytics();
+    if (!data) {
+      this.destroyCharts('company');
+      return;
+    }
+
+    this.companyStatusChart?.destroy();
+    this.redTagStatusChart?.destroy();
+    this.companyTrendChart?.destroy();
+    this.departmentInsightsChart?.destroy();
+    this.feedbackSentimentChart?.destroy();
+    this.lowPerformanceChart?.destroy();
+
+    this.companyStatusChart = this.buildChart(this.companyStatusCanvas(), {
+      type: 'doughnut',
+      data: {
+        labels: data.auditStatusBreakdown.map((item) => item.status),
+        datasets: [
+          {
+            data: data.auditStatusBreakdown.map((item) => item.count),
+            backgroundColor: ['#f59e0b', '#2563eb', '#10b981']
+          }
+        ]
+      }
+    });
+
+    this.redTagStatusChart = this.buildChart(this.redTagStatusCanvas(), {
+      type: 'doughnut',
+      data: {
+        labels: data.redTagStatusBreakdown.map((item) => item.status),
+        datasets: [
+          {
+            data: data.redTagStatusBreakdown.map((item) => item.count),
+            backgroundColor: ['#ef4444', '#10b981', '#f59e0b']
+          }
+        ]
+      }
+    });
+
+    this.companyTrendChart = this.buildChart(this.companyTrendCanvas(), {
+      type: 'line',
+      data: {
+        labels: data.dailyAuditTrend.map((item) => item.label),
+        datasets: [
+          {
+            label: 'Daily audits',
+            data: data.dailyAuditTrend.map((item) => item.count),
+            borderColor: '#2563eb',
+            backgroundColor: 'rgb(37 99 235 / 0.22)',
+            tension: 0.35,
+            fill: true
+          }
+        ]
+      }
+    });
+
+    // Department Insights Chart
+    this.departmentInsightsChart = this.buildChart(this.departmentInsightsCanvas(), {
+      type: 'bar',
+      data: {
+        labels: data.departmentInsights.map((item) => item.department),
+        datasets: [
+          {
+            label: 'Average Score %',
+            data: data.departmentInsights.map((item) => item.averagePercentage),
+            backgroundColor: '#6366f1',
+            borderRadius: 6
+          }
+        ]
+      },
+      options: {
+        scales: {
+          y: {
+            beginAtZero: true,
+            max: 100
+          }
+        }
+      }
+    });
+
+    // Feedback Sentiment Chart
+    this.feedbackSentimentChart = this.buildChart(this.feedbackSentimentCanvas(), {
+      type: 'doughnut',
+      data: {
+        labels: ['Positive', 'Negative'],
+        datasets: [
+          {
+            data: [data.feedbackSentiment.goodCount, data.feedbackSentiment.badCount],
+            backgroundColor: ['#10b981', '#ef4444']
+          }
+        ]
+      }
+    });
+
+    // Recent Low Performance Audits Chart
+    const lowPerformanceData = data.recentLowPerformanceAudits.slice(0, 5);
+    this.lowPerformanceChart = this.buildChart(this.lowPerformanceCanvas(), {
+      type: 'bar',
+      data: {
+        labels: lowPerformanceData.map((item) => `Audit #${item.id}`),
+        datasets: [
+          {
+            label: 'Performance %',
+            data: lowPerformanceData.map((item) => item.percentage),
+            backgroundColor: '#f59e0b',
+            borderRadius: 6
+          }
+        ]
+      },
+      options: {
+        scales: {
+          y: {
+            beginAtZero: true,
+            max: 100
+          }
+        }
+      }
+    });
+
+    // Zone Performance Chart with different colors for each zone
+    const zoneColors = ['#3b82f6', '#ef4444'];
+    this.zonePerformanceChart = this.buildChart(this.zonePerformanceCanvas(), {
+      type: 'bar',
+      data: {
+        labels: data.zonePerformance.map((item) => item.zoneName),
+        datasets: [
+          {
+            label: 'Average Score %',
+            data: data.zonePerformance.map((item) => item.averagePercentage),
+            backgroundColor: data.zonePerformance.map((_, idx) => zoneColors[idx % zoneColors.length]),
+            borderRadius: 6
+          }
+        ]
+      },
+      options: {
+        scales: {
+          y: {
+            beginAtZero: true,
+            max: 100
+          }
+        }
+      }
+    });
+  }
+
+  private renderAuditorCharts(): void {
+    const data = this.auditorAnalytics();
+    if (!data) {
+      this.destroyCharts('auditor');
+      return;
+    }
+
+    this.auditorStatusChart?.destroy();
+    this.auditorTrendChart?.destroy();
+    this.zonePerformanceChart?.destroy();
+    this.zoneInsightsChart?.destroy();
+
+    this.auditorStatusChart = this.buildChart(this.auditorStatusCanvas(), {
+      type: 'bar',
+      data: {
+        labels: data.auditStatusBreakdown.map((item) => item.status),
+        datasets: [
+          {
+            label: 'Audits',
+            data: data.auditStatusBreakdown.map((item) => item.count),
+            backgroundColor: ['#1d4ed8', '#0ea5e9', '#10b981']
+          }
+        ]
+      }
+    });
+
+    this.auditorTrendChart = this.buildChart(this.auditorTrendCanvas(), {
+      type: 'line',
+      data: {
+        labels: data.monthlyAuditTrend.map((item) => item.label),
+        datasets: [
+          {
+            label: 'Monthly audits',
+            data: data.monthlyAuditTrend.map((item) => item.count),
+            borderColor: '#1d4ed8',
+            backgroundColor: 'rgb(29 78 216 / 0.2)',
+            tension: 0.35,
+            fill: true
+          }
+        ]
+      }
+    });
+
+    // Zone Performance Chart
+    this.zonePerformanceChart = this.buildChart(this.zonePerformanceCanvas(), {
+      type: 'bar',
+      data: {
+        labels: data.zoneInsights.map((item) => item.zoneName),
+        datasets: [
+          {
+            label: 'Average Score %',
+            data: data.zoneInsights.map((item) => item.averagePercentage),
+            backgroundColor: '#0ea5e9',
+            borderRadius: 6
+          }
+        ]
+      },
+      options: {
+        scales: {
+          y: {
+            beginAtZero: true,
+            max: 100
+          }
+        }
+      }
+    });
+
+    // Zone Insights Chart with different colors for each zone
+    const zoneInsightColors = ['#8b5cf6', '#ec4899'];
+    this.zoneInsightsChart = this.buildChart(this.zoneInsightsCanvas(), {
+      type: 'bar',
+      data: {
+        labels: data.zoneInsights.map((item) => item.zoneName),
+        datasets: [
+          {
+            label: 'Average Score %',
+            data: data.zoneInsights.map((item) => item.averagePercentage),
+            backgroundColor: data.zoneInsights.map((_, idx) => zoneInsightColors[idx % zoneInsightColors.length]),
+            borderRadius: 6
+          }
+        ]
+      },
+      options: {
+        scales: {
+          y: {
+            beginAtZero: true,
+            max: 100
+          }
+        }
+      }
+    });
+  }
+
+  private buildChart(
+    canvasRef: ElementRef<HTMLCanvasElement> | undefined,
+    config: ChartConfiguration
+  ): Chart | null {
+    if (!canvasRef?.nativeElement) {
+      return null;
+    }
+
+    return new Chart(canvasRef.nativeElement, {
+      ...config,
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+          legend: {
+            position: 'bottom'
+          }
+        },
+        ...config.options
+      }
+    });
+  }
+
+  private destroyCharts(scope: 'company' | 'auditor'): void {
+    if (scope === 'company') {
+      this.companyStatusChart?.destroy();
+      this.redTagStatusChart?.destroy();
+      this.companyTrendChart?.destroy();
+      this.departmentInsightsChart?.destroy();
+      this.feedbackSentimentChart?.destroy();
+      this.lowPerformanceChart?.destroy();
+      this.companyStatusChart = null;
+      this.redTagStatusChart = null;
+      this.companyTrendChart = null;
+      this.departmentInsightsChart = null;
+      this.feedbackSentimentChart = null;
+      this.lowPerformanceChart = null;
+      return;
+    }
+
+    this.auditorStatusChart?.destroy();
+    this.auditorTrendChart?.destroy();
+    this.zonePerformanceChart?.destroy();
+    this.zoneInsightsChart?.destroy();
+    this.auditorStatusChart = null;
+    this.auditorTrendChart = null;
+    this.zonePerformanceChart = null;
+    this.zoneInsightsChart = null;
   }
 }

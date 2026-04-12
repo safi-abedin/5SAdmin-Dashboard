@@ -4,10 +4,11 @@ import { finalize } from 'rxjs';
 import { UserProfileResponseDto } from '../../core/models/profile.model';
 import { ProfileService } from '../../core/services/profile.service';
 import { ToastService } from '../../core/services/toast.service';
+import { ImageViewerComponent } from '../../shared/components/image-viewer/image-viewer.component';
 
 @Component({
   selector: 'app-profile',
-  imports: [ReactiveFormsModule],
+  imports: [ReactiveFormsModule, ImageViewerComponent],
   templateUrl: './profile.component.html',
   styleUrl: './profile.component.css',
   changeDetection: ChangeDetectionStrategy.OnPush
@@ -22,6 +23,7 @@ export class ProfileComponent {
   protected readonly isSaving = signal(false);
   protected readonly selectedLogo = signal<File | null>(null);
   protected readonly logoPreviewUrl = signal<string | null>(null);
+  protected readonly selectedImage = signal<string | null>(null);
 
   protected readonly isCompanyMapped = computed(() => Boolean(this.profile()?.companyId));
 
@@ -103,6 +105,14 @@ export class ProfileComponent {
           this.toastService.error('Unable to update company branding.');
         }
       });
+  }
+
+  protected openImageViewer(imageUrl: string): void {
+    this.selectedImage.set(imageUrl);
+  }
+
+  protected closeImageViewer(): void {
+    this.selectedImage.set(null);
   }
 
   private loadProfile(): void {

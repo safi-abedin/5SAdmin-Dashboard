@@ -154,6 +154,14 @@ th button {
   color: #1d4fbf;
 }
 
+.modal-panel {
+  border: 1px solid #d7e0ea;
+  border-radius: 0.9rem;
+  background: #fff;
+  padding: 1rem;
+  box-shadow: 0 14px 24px rgb(15 23 42 / 0.06);
+}
+
 .detail-modal {
   position: fixed;
   inset: 0;
@@ -167,6 +175,7 @@ th button {
   inset: 0;
   border: 0;
   background: rgba(2, 8, 23, 0.56);
+  z-index: 0;
 }
 
 .modal-card {
@@ -288,10 +297,13 @@ th button {
 
 .image-tile-link {
   display: block;
+  padding: 0;
+  width: 100%;
   border-radius: 0.65rem;
   overflow: hidden;
   border: 1px solid #d8e2ee;
   background: #fff;
+  cursor: pointer;
 }
 
 .image-tile-link img {

@@ -2,7 +2,7 @@ import { DatePipe, DecimalPipe } from '@angular/common';
 import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule } from '@angular/forms';
 import { finalize } from 'rxjs/operators';
-import { AuditResponseDto } from '../../core/models/audit-record.model';
+import { AuditResponseDto, AuditStatus } from '../../core/models/audit-record.model';
 import { CompanyDto } from '../../core/models/company.model';
 import { Role } from '../../core/models/role.model';
 import { UserDto } from '../../core/models/user-management.model';
@@ -13,6 +13,10 @@ import { CompanyService } from '../../core/services/company.service';
 import { ToastService } from '../../core/services/toast.service';
 import { UserManagementService } from '../../core/services/user-management.service';
 import { ZoneService } from '../../core/services/zone.service';
+import { FullscreenModalComponent } from '../../shared/components/fullscreen-modal/fullscreen-modal.component';
+import { ImageViewerComponent } from '../../shared/components/image-viewer/image-viewer.component';
+import { TableComponent } from '../../shared/components/table/table.component';
+import { TableColumn, TableRow } from '../../shared/components/table/table.model';
 
 interface AuditCategoryTab {
   categoryId: number;
@@ -23,12 +27,38 @@ interface AuditCategoryTab {
 
 @Component({
   selector: 'app-audit',
-  imports: [ReactiveFormsModule, DatePipe, DecimalPipe],
+  imports: [
+    ReactiveFormsModule,
+    DatePipe,
+    DecimalPipe,
+    TableComponent,
+    FullscreenModalComponent,
+    ImageViewerComponent
+  ],
   templateUrl: './audit.component.html',
   styleUrl: './audit.component.css',
   changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class AuditComponent {
+    protected readonly columns: TableColumn[] = [
+      { field: 'auditDate', header: 'Audit Date', sortable: true },
+      { field: 'auditorName', header: 'Auditor', sortable: true },
+      { field: 'zoneName', header: 'Zone', sortable: true },
+      { field: 'department', header: 'Department', sortable: true },
+      { field: 'percentage', header: 'Score %', sortable: true, align: 'end', width: '110px' },
+      {
+        field: 'statusLabel',
+        header: 'Status',
+        sortable: true,
+        toneMap: {
+          draft: 'tone-warning',
+          submitted: 'tone-info',
+          reviewed: 'tone-success'
+        }
+      },
+      { field: 'createdAt', header: 'Created', sortable: true }
+    ];
+
   private readonly authService = inject(AuthService);
   private readonly formBuilder = inject(FormBuilder);
   private readonly companyService = inject(CompanyService);
@@ -44,6 +74,7 @@ export class AuditComponent {
 
   protected readonly rows = signal<AuditResponseDto[]>([]);
   protected readonly selectedAudit = signal<AuditResponseDto | null>(null);
+  protected readonly selectedImage = signal<string | null>(null);
   protected readonly isDetailModalOpen = signal(false);
   protected readonly activeCategoryId = signal<number | null>(null);
 
@@ -60,7 +91,20 @@ export class AuditComponent {
   protected readonly sortDirection = signal<'asc' | 'desc'>('desc');
 
   protected readonly pageSizes = [10, 20, 50];
-  protected readonly statusOptions = ['submitted', 'inprogress', 'completed', 'draft'];
+  protected readonly statusOptions = ['Draft', 'Submitted', 'Reviewed'];
+
+  protected readonly tableRows = computed<TableRow[]>(() =>
+    this.rows().map((item) => ({
+      id: item.id,
+      auditDate: this.formatDate(item.auditDate),
+      auditorName: item.auditorName,
+      zoneName: item.zoneName || `Zone #${item.zoneId}`,
+      department: item.department,
+      percentage: `${item.percentage.toFixed(2)}%`,
+      statusLabel: this.formatAuditStatus(item.status),
+      createdAt: this.formatDate(item.createdAt)
+    }))
+  );
 
   protected readonly totalPages = computed(() => {
     const size = Math.max(1, this.pageSize());
@@ -195,7 +239,7 @@ export class AuditComponent {
     this.loadAudits();
   }
 
-  protected onPageSizeChange(value: string): void {
+  protected onPageSizeChange(value: string | number): void {
     const parsed = Number(value);
     if (!Number.isFinite(parsed) || parsed <= 0) {
       return;
@@ -218,6 +262,17 @@ export class AuditComponent {
     this.loadAudits();
   }
 
+  protected onTableSort(sort: { field: string; direction: 'asc' | 'desc' | '' }): void {
+    if (!sort.field || !sort.direction) {
+      return;
+    }
+
+    this.sortBy.set(this.mapSortField(sort.field));
+    this.sortDirection.set(sort.direction);
+    this.currentPage.set(1);
+    this.loadAudits();
+  }
+
   protected onViewDetails(id: number): void {
     this.auditService.getById(id).subscribe({
       next: (audit) => {
@@ -231,9 +286,70 @@ export class AuditComponent {
     });
   }
 
+  protected onView(row: TableRow): void {
+    const id = this.getIdFromRow(row);
+    if (!id) {
+      this.toastService.error('Invalid audit selection.');
+      return;
+    }
+
+    this.onViewDetails(id);
+  }
+
+  protected onDelete(row: TableRow): void {
+    const id = this.getIdFromRow(row);
+    if (!id) {
+      this.toastService.error('Invalid audit selection.');
+      return;
+    }
+
+    this.auditService.delete(id).subscribe({
+      next: () => {
+        this.toastService.success('Audit deleted successfully.');
+        this.loadAudits();
+      },
+      error: () => {
+        this.toastService.error('Unable to delete audit.');
+      }
+    });
+  }
+
+  protected onPdf(row: TableRow): void {
+    const id = this.getIdFromRow(row);
+    if (!id) {
+      this.toastService.error('Invalid audit selection.');
+      return;
+    }
+
+    this.auditService.getPdf(id).subscribe({
+      next: (pdfBlob) => {
+        const url = URL.createObjectURL(pdfBlob);
+        window.open(url, '_blank', 'noopener');
+
+        const anchor = document.createElement('a');
+        anchor.href = url;
+        anchor.download = `audit-${id}.pdf`;
+        anchor.click();
+
+        URL.revokeObjectURL(url);
+      },
+      error: () => {
+        this.toastService.error('Unable to generate audit PDF.');
+      }
+    });
+  }
+
   protected closeDetailsModal(): void {
     this.isDetailModalOpen.set(false);
     this.activeCategoryId.set(null);
+  }
+
+  protected openImageViewer(imageUrl: string): void {
+    this.selectedImage.set(imageUrl);
+  }
+
+  protected closeImageViewer(): void {
+    this.selectedImage.set(null);
   }
 
   protected selectCategory(categoryId: number): void {
@@ -242,6 +358,52 @@ export class AuditComponent {
 
   protected feedbackImageUrls(item: AuditResponseDto): string[] {
     return (item.feedBackItems ?? []).flatMap((feedback) => feedback.imageUrls ?? []);
+  }
+
+  protected mapSortField(field: string): string {
+    const fields: Record<string, string> = {
+      auditDate: 'AuditDate',
+      auditorName: 'AuditorName',
+      zoneName: 'ZoneName',
+      department: 'Department',
+      percentage: 'Percentage',
+      statusLabel: 'Status',
+      createdAt: 'CreatedAt'
+    };
+
+    return fields[field] ?? 'CreatedAt';
+  }
+
+  protected formatAuditStatus(value: string | number): string {
+    if (typeof value === 'number') {
+      const statusMap: Record<number, string> = {
+        [AuditStatus.Draft]: 'Draft',
+        [AuditStatus.Submitted]: 'Submitted',
+        [AuditStatus.Reviewed]: 'Reviewed'
+      };
+
+      return statusMap[value] ?? String(value);
+    }
+
+    return value;
+  }
+
+  private formatDate(value: string): string {
+    if (!value) {
+      return '-';
+    }
+
+    return new Date(value).toLocaleDateString();
+  }
+
+  private getIdFromRow(row: TableRow): number | null {
+    const raw = row['id'];
+    if (typeof raw === 'number') {
+      return raw;
+    }
+
+    const parsed = Number(raw);
+    return Number.isFinite(parsed) && parsed > 0 ? parsed : null;
   }
 
   private firstCategoryIdFromAudit(audit: AuditResponseDto): number | null {

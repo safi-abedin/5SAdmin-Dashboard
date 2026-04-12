@@ -71,6 +71,73 @@
   opacity: 0.92;
 }
 
+.tone-pill {
+  display: inline-flex;
+  align-items: center;
+  border-radius: 999px;
+  padding: 0.2rem 0.55rem;
+  font-size: 0.76rem;
+  font-weight: 700;
+}
+
+.tone-neutral {
+  background: #eef2f7;
+  color: #334155;
+}
+
+.tone-success {
+  background: #e7f9ef;
+  color: #047857;
+}
+
+.tone-warning {
+  background: #fff6e8;
+  color: #b45309;
+}
+
+.tone-danger {
+  background: #ffeceb;
+  color: #b42318;
+}
+
+.tone-info {
+  background: #eaf3ff;
+  color: #1d4ed8;
+}
+
+.table-confirm {
+  position: fixed;
+  inset: 0;
+  z-index: 1400;
+}
+
+.table-confirm-backdrop {
+  position: absolute;
+  inset: 0;
+  border: 0;
+  background: rgb(2 8 23 / 0.64);
+}
+
+.table-confirm-shell {
+  position: relative;
+  width: min(560px, calc(100vw - 2rem));
+  margin: 6rem auto;
+  background: #fff;
+  border: 1px solid #d6dfeb;
+  border-radius: 1rem;
+  padding: 1rem;
+  box-shadow: 0 24px 50px rgb(0 0 0 / 0.2);
+}
+
+.table-confirm-shell h3 {
+  margin: 0 0 0.4rem;
+}
+
+.table-confirm-shell p {
+  margin: 0 0 1rem;
+  color: #475569;
+}
+
 @media (max-width: 768px) {
   .table-search {
     min-width: 100%;

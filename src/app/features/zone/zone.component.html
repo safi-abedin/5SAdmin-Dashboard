@@ -1,6 +1,15 @@
 <section class="zone-page row g-4">
-  <div class="col-12 col-xl-8">
+ <header class="page-header">
+    <div>
+      <h1>Zone Management</h1>
+      <p>Manage your zones and their configurations.</p>
+    </div>
+  </header>
+
+  <div class="col-12">
     <app-table
+      title="Zones"
+      primaryActionLabel="Create Zone"
       [columns]="columns"
       [data]="rows()"
       [totalItems]="totalItems()"
@@ -12,44 +21,47 @@
       (view)="onView($event)"
       (edit)="onEdit($event)"
       (delete)="onDelete($event)"
+      (primaryAction)="openCreateModal()"
     />
   </div>
 
-  <div class="col-12 col-xl-4">
-    <div class="card border-0 shadow-sm h-100">
-      <div class="card-body">
-        <h2 class="h5 mb-3">{{ formTitle() }}</h2>
-
-        <form [formGroup]="zoneForm" (ngSubmit)="saveZone()" class="row g-3" novalidate>
-          <div class="col-12">
-            <label for="name" class="form-label">Zone Name</label>
-            <input id="name" type="text" class="form-control" formControlName="name" />
-            @if (zoneForm.controls.name.touched && zoneForm.controls.name.invalid) {
-              <small class="text-danger">Zone name is required.</small>
-            }
-          </div>
-
-          <div class="col-12 d-flex gap-2 flex-wrap">
-            <button type="submit" class="btn btn-primary" [disabled]="isSaving()">
-              @if (editingZoneId()) {
-                Update Zone
-              } @else {
-                Create Zone
-              }
-            </button>
-            <button type="button" class="btn btn-outline-secondary" (click)="resetForm()">Clear</button>
-          </div>
-        </form>
-
-        @if (selectedZone(); as zone) {
-          <hr />
-          <h3 class="h6 mb-2">Selected Zone</h3>
-          <dl class="row mb-0 small">
-            <dt class="col-5">Name</dt>
-            <dd class="col-7">{{ zone.name }}</dd>
+  @if (isModalOpen()) {
+    <app-fullscreen-modal
+      [title]="modalMode() === 'view' ? 'Zone Details' : formTitle()"
+      subtitle="Zone"
+      (close)="closeModal()"
+    >
+      @if (modalMode() === 'view' && selectedZone(); as zone) {
+        <section class="modal-panel">
+          <dl class="row mb-0">
+            <dt class="col-sm-2">Name</dt>
+            <dd class="col-sm-10">{{ zone.name }}</dd>
           </dl>
-        }
-      </div>
-    </div>
-  </div>
+        </section>
+      } @else {
+        <section class="modal-panel">
+          <form [formGroup]="zoneForm" (ngSubmit)="saveZone()" class="row g-3" novalidate>
+            <div class="col-12 col-lg-6">
+              <label for="name" class="form-label">Zone Name</label>
+              <input id="name" type="text" class="form-control" formControlName="name" />
+              @if (zoneForm.controls.name.touched && zoneForm.controls.name.invalid) {
+                <small class="text-danger">Zone name is required.</small>
+              }
+            </div>
+
+            <div class="col-12 d-flex gap-2 flex-wrap">
+              <button type="submit" class="btn btn-primary" [disabled]="isSaving()">
+                @if (editingZoneId()) {
+                  Update Zone
+                } @else {
+                  Create Zone
+                }
+              </button>
+              <button type="button" class="btn btn-outline-secondary" (click)="resetForm()">Clear</button>
+            </div>
+          </form>
+        </section>
+      }
+    </app-fullscreen-modal>
+  }
 </section>

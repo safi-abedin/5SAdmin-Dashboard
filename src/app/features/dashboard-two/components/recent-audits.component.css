@@ -59,3 +59,74 @@ tbody tr:hover {
   text-align: center;
   color: #64748b;
 }
+
+.actions-col {
+  width: 180px;
+  text-align: center;
+}
+
+.actions-cell {
+  display: flex;
+  gap: 0.35rem;
+  justify-content: center;
+  padding: 0.4rem 0.6rem;
+}
+
+.action-btn {
+  border: none;
+  border-radius: 0.4rem;
+  padding: 0.4rem 0.65rem;
+  font-size: 0.75rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  white-space: nowrap;
+}
+
+.action-btn:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.12);
+}
+
+.action-btn.view-btn {
+  background: #0f62fe;
+  color: white;
+}
+
+.action-btn.view-btn:hover {
+  background: #0353e6;
+}
+
+.action-btn.pdf-btn {
+  background: #6366f1;
+  color: white;
+}
+
+.action-btn.pdf-btn:hover {
+  background: #4f46e5;
+}
+
+.action-btn.delete-btn {
+  background: #dc2626;
+  color: white;
+}
+
+.action-btn.delete-btn:hover {
+  background: #b91c1c;
+}
+
+@media (max-width: 720px) {
+  .actions-cell {
+    flex-wrap: wrap;
+  }
+
+  .action-btn {
+    font-size: 0.7rem;
+    padding: 0.3rem 0.5rem;
+  }
+
+  th,
+  td {
+    padding: 0.5rem 0.4rem;
+  }
+}

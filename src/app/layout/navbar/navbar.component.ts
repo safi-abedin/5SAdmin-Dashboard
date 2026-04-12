@@ -22,6 +22,11 @@ export class NavbarComponent {
     this.layoutShellService.toggleMobileMenu();
   }
 
+  goToMyProfile(): void {
+    this.layoutShellService.closeMobileMenu();
+    this.router.navigate(['/my-profile']);
+  }
+
   logout(): void {
     this.layoutShellService.closeMobileMenu();
     this.authService.logout();

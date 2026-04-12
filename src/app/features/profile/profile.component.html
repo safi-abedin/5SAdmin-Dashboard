@@ -1,9 +1,8 @@
 <section class="profile-shell">
   <header class="profile-hero">
     <div>
-      <p class="eyebrow">Profile</p>
-      <h1>Account and company branding</h1>
-      <p class="subtitle">Update company address and logo from one place.</p>
+      <h1>Company Management</h1>
+      <p class="subtitle">Maintain a polished company identity with structured details and brand assets.</p>
     </div>
   </header>
 
@@ -13,62 +12,71 @@
 
   @if (!isLoading() && profile(); as data) {
     <section class="panel-grid">
-      <article class="card profile-info" aria-label="Profile details">
-        <h2>My profile</h2>
-        <dl>
-          <div>
-            <dt>Name</dt>
-            <dd>{{ data.name }}</dd>
-          </div>
-          <div>
-            <dt>Username</dt>
-            <dd>{{ data.userName }}</dd>
-          </div>
-          <div>
-            <dt>Role</dt>
-            <dd>{{ data.role }}</dd>
-          </div>
-          <div>
-            <dt>Company</dt>
-            <dd>{{ data.companyName || 'Not assigned' }}</dd>
-          </div>
-          <div>
-            <dt>Email</dt>
-            <dd>{{ data.email || 'Not available' }}</dd>
-          </div>
-          <div>
-            <dt>Phone</dt>
-            <dd>{{ data.phone || 'Not available' }}</dd>
-          </div>
-        </dl>
+      <article class="card profile-info" aria-label="Company details">
+        <h2>Company Overview</h2>
+
+        <div class="info-grid">
+          <article>
+            <span>Company</span>
+            <strong>{{ data.companyName || 'Not assigned' }}</strong>
+          </article>
+          <article>
+            <span>Primary Contact</span>
+            <strong>{{ data.name }}</strong>
+          </article>
+          <article>
+            <span>Contact Email</span>
+            <strong>{{ data.email || 'Not available' }}</strong>
+          </article>
+          <article>
+            <span>Contact Phone</span>
+            <strong>{{ data.phone || 'Not available' }}</strong>
+          </article>
+        </div>
+
+        <div class="address-block">
+          <h3>Address</h3>
+          <p>{{ data.companyAddress || 'No address available.' }}</p>
+        </div>
       </article>
 
       <article class="card branding" aria-label="Company branding">
-        <h2>Company branding</h2>
+        <h2>Branding Assets</h2>
 
         @if (!isCompanyMapped()) {
           <p class="inline-warning">Your account is not currently mapped to a company.</p>
         }
 
-        <div class="logo-row">
+        <div class="upload-shell">
           <div class="logo-frame">
-            @if (logoPreviewUrl()) {
-              <img [src]="logoPreviewUrl()!" alt="Selected company logo preview" />
-            } @else if (data.companyLogoUrl) {
-              <img [src]="data.companyLogoUrl" alt="Current company logo" />
-            } @else {
-              <span>No logo</span>
-            }
+            <button
+              type="button"
+              class="logo-preview-btn"
+              [disabled]="!logoPreviewUrl() && !data.companyLogoUrl"
+              (click)="openImageViewer(logoPreviewUrl() || data.companyLogoUrl)"
+            >
+              @if (logoPreviewUrl()) {
+                <img [src]="logoPreviewUrl()!" alt="Selected company logo preview" />
+              } @else if (data.companyLogoUrl) {
+                <img [src]="data.companyLogoUrl" alt="Current company logo" />
+              } @else {
+                <span>No logo uploaded</span>
+              }
+            </button>
           </div>
 
-          <label class="upload-field" for="logo-file">Choose logo image</label>
-          <input
-            id="logo-file"
-            type="file"
-            accept="image/*"
-            [disabled]="isSaving() || !isCompanyMapped()"
-            (change)="onLogoSelected($event)"
-          />
+          <div class="upload-controls">
+            <label class="upload-field" for="logo-file">Select Logo Image</label>
+            <p>Recommended: square PNG or SVG, minimum 512x512, transparent background.</p>
+            <input
+              id="logo-file"
+              type="file"
+              accept="image/*"
+              hidden
+              [disabled]="isSaving() || !isCompanyMapped()"
+              (change)="onLogoSelected($event)"
+            />
+          </div>
         </div>
 
         <form [formGroup]="brandingForm" (ngSubmit)="saveBranding()" class="branding-form">
@@ -90,10 +98,14 @@
             class="save-btn"
             [disabled]="isSaving() || !isCompanyMapped()"
           >
-            {{ isSaving() ? 'Saving...' : 'Save Branding' }}
+            {{ isSaving() ? 'Saving...' : 'Save' }}
           </button>
         </form>
       </article>
     </section>
+  }
+
+  @if (selectedImage(); as imageSrc) {
+    <app-image-viewer [src]="imageSrc" alt="Company logo" (close)="closeImageViewer()" />
   }
 </section>

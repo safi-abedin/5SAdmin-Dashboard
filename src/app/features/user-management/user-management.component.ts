@@ -13,12 +13,13 @@ import { AuthService } from '../../core/services/auth.service';
 import { CompanyService } from '../../core/services/company.service';
 import { ToastService } from '../../core/services/toast.service';
 import { UserManagementService } from '../../core/services/user-management.service';
+import { FullscreenModalComponent } from '../../shared/components/fullscreen-modal/fullscreen-modal.component';
 import { TableComponent } from '../../shared/components/table/table.component';
 import { TableColumn, TableRow } from '../../shared/components/table/table.model';
 
 @Component({
   selector: 'app-user-management',
-  imports: [ReactiveFormsModule, TableComponent],
+  imports: [ReactiveFormsModule, TableComponent, FullscreenModalComponent],
   templateUrl: './user-management.component.html',
   styleUrl: './user-management.component.css',
   changeDetection: ChangeDetectionStrategy.OnPush
@@ -47,6 +48,9 @@ export class UserManagementComponent {
 
   protected readonly selectedUser = signal<UserDto | null>(null);
   protected readonly editingUserId = signal<number | null>(null);
+  protected readonly modalMode = signal<'create' | 'edit' | 'view' | null>(null);
+
+  protected readonly isModalOpen = computed(() => this.modalMode() !== null);
 
   protected readonly loggedInRole = computed(() => this.authService.getRole());
   protected readonly loggedInCompanyId = computed(() => this.authService.getCompanyId());
@@ -134,7 +138,7 @@ export class UserManagementComponent {
         .subscribe({
           next: () => {
             this.toastService.success('User updated successfully.');
-            this.resetForm();
+            this.closeModal();
             this.loadUsers();
           },
           error: () => {
@@ -151,7 +155,7 @@ export class UserManagementComponent {
       .subscribe({
         next: () => {
           this.toastService.success('User created successfully.');
-          this.resetForm();
+          this.closeModal();
           this.currentPage.set(1);
           this.loadUsers();
         },
@@ -171,7 +175,7 @@ export class UserManagementComponent {
     this.userService.getById(id).subscribe({
       next: (user) => {
         this.selectedUser.set(user);
-        this.toastService.info(`Viewing user: ${user.username}`);
+        this.modalMode.set('view');
       },
       error: () => {
         this.toastService.error('Unable to load user details.');
@@ -190,6 +194,7 @@ export class UserManagementComponent {
       next: (user) => {
         this.editingUserId.set(user.id);
         this.selectedUser.set(user);
+        this.modalMode.set('edit');
 
         const normalizedRole = this.normalizeRole(user.role);
         const role = this.roleOptions().some((option) => option.value === normalizedRole)
@@ -251,6 +256,16 @@ export class UserManagementComponent {
     } else {
       this.userForm.controls.companyId.enable({ emitEvent: false });
     }
+  }
+
+  protected openCreateModal(): void {
+    this.resetForm();
+    this.modalMode.set('create');
+  }
+
+  protected closeModal(): void {
+    this.modalMode.set(null);
+    this.resetForm();
   }
 
   protected generatePassword(length = 12): void {

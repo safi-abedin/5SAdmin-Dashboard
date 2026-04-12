@@ -67,6 +67,11 @@ export const routes: Routes = [
 				loadComponent: () => import('./features/zone/zone.component').then((m) => m.ZoneComponent)
 			},
 			{
+				path: 'my-profile',
+				loadComponent: () =>
+					import('./features/my-profile/my-profile.component').then((m) => m.MyProfileComponent)
+			},
+			{
 				path: 'profile',
 				loadComponent: () =>
 					import('./features/profile/profile.component').then((m) => m.ProfileComponent)
@@ -88,7 +93,7 @@ export const routes: Routes = [
 			{
 				path: '',
 				pathMatch: 'full',
-				redirectTo: 'dashboard'
+				redirectTo: 'dashboard-two'
 			}
 		]
 	},

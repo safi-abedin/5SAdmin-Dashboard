@@ -1,7 +1,6 @@
 <section class="audit-page">
   <header class="page-header">
     <div>
-      <p class="eyebrow">Audit Feature</p>
       <h1>Audits Explorer</h1>
       <p>Filter and sort audits by zone, score, user, status, and date ranges.</p>
     </div>
@@ -98,103 +97,32 @@
   }
 
   <section class="content-grid">
-    <article class="card table-card">
-      <div class="table-head">
-        <h2>Audits</h2>
-        <div>
-          <label for="audit-page-size">Rows</label>
-          <select
-            id="audit-page-size"
-            [value]="pageSize()"
-            (change)="onPageSizeChange(pageSizeSelect.value)"
-            #pageSizeSelect
-          >
-            @for (size of pageSizes; track size) {
-              <option [value]="size">{{ size }}</option>
-            }
-          </select>
-        </div>
-      </div>
-
-      <div class="table-wrap">
-        <table>
-          <thead>
-            <tr>
-              <th><button type="button" (click)="onSort('AuditDate')">Audit Date</button></th>
-              <th><button type="button" (click)="onSort('AuditorName')">Auditor</button></th>
-              <th><button type="button" (click)="onSort('ZoneName')">Zone</button></th>
-              <th><button type="button" (click)="onSort('Department')">Department</button></th>
-              <th><button type="button" (click)="onSort('Percentage')">Score %</button></th>
-              <th><button type="button" (click)="onSort('Status')">Status</button></th>
-              <th><button type="button" (click)="onSort('CreatedAt')">Created</button></th>
-              <th class="text-center">Detail</th>
-            </tr>
-          </thead>
-          <tbody>
-            @if (isLoading()) {
-              <tr>
-                <td colspan="8" class="empty">Loading audits...</td>
-              </tr>
-            } @else {
-              @for (row of rows(); track row.id) {
-                <tr>
-                  <td>{{ row.auditDate | date: 'mediumDate' }}</td>
-                  <td>{{ row.auditorName }}</td>
-                  <td>{{ row.zoneName || ('Zone #' + row.zoneId) }}</td>
-                  <td>{{ row.department }}</td>
-                  <td>{{ row.percentage | number: '1.0-2' }}%</td>
-                  <td><span class="status-pill">{{ row.status }}</span></td>
-                  <td>{{ row.createdAt | date: 'mediumDate' }}</td>
-                  <td class="text-center">
-                    <button
-                      type="button"
-                      class="btn btn-sm btn-outline-primary"
-                      (click)="onViewDetails(row.id)"
-                    >
-                      View
-                    </button>
-                  </td>
-                </tr>
-              } @empty {
-                <tr>
-                  <td colspan="8" class="empty">No audits found.</td>
-                </tr>
-              }
-            }
-          </tbody>
-        </table>
-      </div>
-
-      <div class="pager">
-        <span>Page {{ currentPage() }} / {{ totalPages() }}</span>
-        <div class="pager-actions">
-          <button type="button" class="btn btn-sm btn-outline-secondary" [disabled]="currentPage() <= 1" (click)="onPageChange(currentPage() - 1)">
-            Prev
-          </button>
-          <button type="button" class="btn btn-sm btn-outline-secondary" [disabled]="currentPage() >= totalPages()" (click)="onPageChange(currentPage() + 1)">
-            Next
-          </button>
-        </div>
-      </div>
-    </article>
+    <app-table
+      title="Audits"
+      [columns]="columns"
+      [data]="tableRows()"
+      [totalItems]="totalItems()"
+      [pageSize]="pageSize()"
+      [currentPage]="currentPage()"
+      [isLoading]="isLoading()"
+      [showEditAction]="false"
+      extraActionLabel="PDF"
+      (view)="onView($event)"
+      (delete)="onDelete($event)"
+      (extraAction)="onPdf($event)"
+      (pageChange)="onPageChange($event)"
+      (pageSizeChange)="onPageSizeChange($event)"
+      (sortChange)="onTableSort($event)"
+    />
   </section>
 
   @if (isDetailModalOpen() && selectedAudit(); as item) {
-    <section class="detail-modal" role="dialog" aria-modal="true" aria-label="Audit detail">
-      <button
-        type="button"
-        class="modal-backdrop"
-        aria-label="Close detail modal"
-        (click)="closeDetailsModal()"
-      ></button>
-
-      <article class="modal-card">
+    <app-fullscreen-modal [title]="'#' + item.id + ' - ' + item.auditorName" subtitle="Audit Detail" (close)="closeDetailsModal()">
+      <section class="modal-panel">
         <header class="modal-header">
           <div>
-            <p class="eyebrow">Audit Detail</p>
-            <h2>#{{ item.id }} - {{ item.auditorName }}</h2>
+            <h2>Audit overview</h2>
           </div>
-          <button type="button" class="btn btn-outline-secondary btn-sm" (click)="closeDetailsModal()">Close</button>
         </header>
 
         <section class="meta-grid">
@@ -231,7 +159,6 @@
               <thead>
                 <tr>
                   <th>Order</th>
-                  <th>Category</th>
                   <th>Checking Item</th>
                   <th>Criteria</th>
                   <th>Score</th>
@@ -241,7 +168,6 @@
                 @for (line of activeCategoryItems(); track line.id ?? line.checklistItemId) {
                   <tr>
                     <td>{{ line.order ?? '-' }}</td>
-                    <td>{{ line.catagoryName || ('Cat #' + (line.checklistCatagoryId || '-')) }}</td>
                     <td>{{ line.checkingItemName || ('Checklist #' + line.checklistItemId) }}</td>
                     <td>{{ line.evaluationCriteria || '-' }}</td>
                     <td>{{ line.score }}</td>
@@ -272,15 +198,19 @@
           <h3>Feedback Images</h3>
           <div class="image-grid">
             @for (imageUrl of feedbackImageUrls(item); track imageUrl) {
-              <a [href]="imageUrl" target="_blank" rel="noopener" class="image-tile-link">
+              <button type="button" class="image-tile-link" (click)="openImageViewer(imageUrl)">
                 <img [src]="imageUrl" alt="Audit feedback image" />
-              </a>
+              </button>
             } @empty {
               <p class="empty">No feedback images.</p>
             }
           </div>
         </section>
-      </article>
-    </section>
+      </section>
+    </app-fullscreen-modal>
+  }
+
+  @if (selectedImage(); as imageSrc) {
+    <app-image-viewer [src]="imageSrc" alt="Audit feedback image" (close)="closeImageViewer()" />
   }
 </section>

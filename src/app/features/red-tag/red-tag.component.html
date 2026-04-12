@@ -40,8 +40,8 @@
         <span>Status</span>
         <select formControlName="status">
           <option value="">All statuses</option>
-          @for (status of statusOptions; track status) {
-            <option [value]="status">{{ status }}</option>
+          @for (status of statusOptions; track status.value) {
+            <option [value]="status.value">{{ status.label }}</option>
           }
         </select>
       </label>
@@ -88,130 +88,146 @@
   }
 
   <section class="content-grid">
-    <article class="card table-card">
-      <div class="table-head">
-        <h2>Red Tags</h2>
-        <div>
-          <label for="redtag-page-size">Rows</label>
-          <select id="redtag-page-size" [value]="pageSize()" (change)="onPageSizeChange(pageSizeSelect.value)" #pageSizeSelect>
-            @for (size of pageSizes; track size) {
-              <option [value]="size">{{ size }}</option>
-            }
-          </select>
-        </div>
-      </div>
-
-      <div class="table-wrap">
-        <table>
-          <thead>
-            <tr>
-              <th><button type="button" (click)="onSort('CreatedAt')">Preview</button></th>
-              <th><button type="button" (click)="onSort('ItemName')">Item</button></th>
-              <th><button type="button" (click)="onSort('ResponsiblePerson')">User</button></th>
-              <th><button type="button" (click)="onSort('Status')">Status</button></th>
-              <th><button type="button" (click)="onSort('IdentifiedDate')">Identified</button></th>
-              <th><button type="button" (click)="onSort('ClosingDate')">Closed</button></th>
-              <th><button type="button" (click)="onSort('CreatedAt')">Created</button></th>
-              <th class="text-center">Detail</th>
-            </tr>
-          </thead>
-          <tbody>
-            @if (isLoading()) {
-              <tr>
-                <td colspan="8" class="empty">Loading red tags...</td>
-              </tr>
-            } @else {
-              @for (row of rows(); track row.id) {
-                <tr>
-                  <td>
-                    @if (row.photoUrl.length > 0) {
-                      <img class="preview-thumb" [src]="row.photoUrl[0]" alt="Red tag photo preview" />
-                    } @else {
-                      <span class="empty">-</span>
-                    }
-                  </td>
-                  <td>{{ row.itemName }}</td>
-                  <td>{{ row.responsiblePerson }}</td>
-                  <td><span class="status-pill">{{ row.status }}</span></td>
-                  <td>{{ row.identifiedDate | date: 'mediumDate' }}</td>
-                  <td>{{ row.closingDate ? (row.closingDate | date: 'mediumDate') : '-' }}</td>
-                  <td>{{ row.createdAt | date: 'mediumDate' }}</td>
-                  <td class="text-center">
-                    <button type="button" class="btn btn-sm btn-outline-primary" (click)="onViewDetails(row.id)">
-                      View
-                    </button>
-                  </td>
-                </tr>
-              } @empty {
-                <tr>
-                  <td colspan="8" class="empty">No red tags found.</td>
-                </tr>
-              }
-            }
-          </tbody>
-        </table>
-      </div>
-
-      <div class="pager">
-        <span>Page {{ currentPage() }} / {{ totalPages() }}</span>
-        <div class="pager-actions">
-          <button type="button" class="btn btn-sm btn-outline-secondary" [disabled]="currentPage() <= 1" (click)="onPageChange(currentPage() - 1)">
-            Prev
-          </button>
-          <button type="button" class="btn btn-sm btn-outline-secondary" [disabled]="currentPage() >= totalPages()" (click)="onPageChange(currentPage() + 1)">
-            Next
-          </button>
-        </div>
-      </div>
-    </article>
+    <app-table
+      title="Red Tags"
+      primaryActionLabel="Create Red Tag"
+      [columns]="columns"
+      [data]="tableRows()"
+      [totalItems]="totalItems()"
+      [pageSize]="pageSize()"
+      [currentPage]="currentPage()"
+      [isLoading]="isLoading()"
+      (primaryAction)="openCreateModal()"
+      (view)="onView($event)"
+      (edit)="onEdit($event)"
+      (delete)="onDelete($event)"
+      (pageChange)="onPageChange($event)"
+      (pageSizeChange)="onPageSizeChange($event)"
+      (sortChange)="onTableSort($event)"
+    />
   </section>
 
-  @if (isDetailModalOpen() && selectedRedTag(); as item) {
-    <section class="detail-modal" role="dialog" aria-modal="true" aria-label="Red tag detail">
-      <button
-        type="button"
-        class="modal-backdrop"
-        aria-label="Close detail modal"
-        (click)="closeDetailsModal()"
-      ></button>
-
-      <article class="modal-card">
-        <header class="modal-header">
+  @if (isModalOpen()) {
+    <app-fullscreen-modal
+      [title]="modalMode() === 'create' ? 'Create Red Tag' : modalMode() === 'edit' ? 'Update Red Tag' : 'Red Tag Details'"
+      subtitle="Red Tag"
+      (close)="closeModal()"
+    >
+      @if (modalMode() === 'view' && selectedRedTag(); as item) {
+        <section class="modal-panel">
+          <header class="modal-header">
           <div>
-            <p class="eyebrow">Red Tag Detail</p>
-            <h2>#{{ item.id }} - {{ item.itemName }}</h2>
+              <h2>#{{ item.id }} - {{ item.itemName }}</h2>
           </div>
-          <button type="button" class="btn btn-outline-secondary btn-sm" (click)="closeDetailsModal()">Close</button>
-        </header>
+          </header>
 
-        <section class="meta-grid">
-          <div><span>Responsible</span><strong>{{ item.responsiblePerson }}</strong></div>
-          <div><span>Status</span><strong>{{ item.status }}</strong></div>
-          <div><span>Identified Date</span><strong>{{ item.identifiedDate | date: 'mediumDate' }}</strong></div>
-          <div><span>Closing Date</span><strong>{{ item.closingDate ? (item.closingDate | date: 'mediumDate') : '-' }}</strong></div>
-          <div><span>Quantity</span><strong>{{ item.quantity }}</strong></div>
-          <div><span>Location</span><strong>{{ item.location || '-' }}</strong></div>
-          <div><span>Created</span><strong>{{ item.createdAt | date: 'medium' }}</strong></div>
-        </section>
+          <section class="meta-grid">
+            <div><span>Responsible</span><strong>{{ item.responsiblePerson }}</strong></div>
+            <div><span>Status</span><strong>{{ item.status }}</strong></div>
+            <div><span>Identified Date</span><strong>{{ item.identifiedDate | date: 'mediumDate' }}</strong></div>
+            <div><span>Closing Date</span><strong>{{ item.closingDate ? (item.closingDate | date: 'mediumDate') : '-' }}</strong></div>
+            <div><span>Quantity</span><strong>{{ item.quantity }}</strong></div>
+            <div><span>Location</span><strong>{{ item.location || '-' }}</strong></div>
+            <div><span>Created</span><strong>{{ item.createdAt | date: 'medium' }}</strong></div>
+          </section>
 
-        <section class="modal-section">
-          <h3>Description</h3>
-          <p class="desc">{{ item.description || 'No description.' }}</p>
-        </section>
+          <section class="modal-section">
+            <h3>Description</h3>
+            <p class="desc">{{ item.description || 'No description.' }}</p>
+          </section>
 
-        <section class="modal-section">
-          <h3>Photos</h3>
-          <div class="image-grid">
-            @for (photo of item.photoUrl; track photo) {
-              <a [href]="photo" target="_blank" rel="noopener" class="image-tile-link">
-                <img [src]="photo" alt="Red tag image" />
-              </a>
-            } @empty {
-              <p class="empty">No photos available.</p>
-            }
-          </div>
+          <section class="modal-section">
+            <h3>Photos</h3>
+            <div class="image-grid">
+              @for (photo of item.photoUrl; track photo) {
+                <button type="button" class="image-tile-link" (click)="openImageViewer(photo)">
+                  <img [src]="photo" alt="Red tag image" />
+                </button>
+              } @empty {
+                <p class="empty">No photos available.</p>
+              }
+            </div>
+          </section>
         </section>
-      </article>
-    </section>
+      } @else {
+        <section class="modal-panel">
+          <form [formGroup]="redTagForm" (ngSubmit)="saveRedTag()" class="row g-3">
+            <div class="col-12 col-lg-6">
+              <label class="form-label" for="itemName">Item Name</label>
+              <input id="itemName" class="form-control" type="text" formControlName="itemName" />
+            </div>
+
+            <div class="col-12 col-lg-3">
+              <label class="form-label" for="quantity">Quantity</label>
+              <input id="quantity" class="form-control" type="number" min="1" formControlName="quantity" />
+            </div>
+
+            <div class="col-12 col-lg-3">
+              <label class="form-label" for="status">Status</label>
+              <select id="status" class="form-select" formControlName="status">
+                @for (status of statusOptions; track status.value) {
+                  <option [ngValue]="status.value">{{ status.label }}</option>
+                }
+              </select>
+            </div>
+
+            <div class="col-12 col-lg-6">
+              <label class="form-label" for="responsiblePerson">Responsible Person</label>
+              <input id="responsiblePerson" class="form-control" type="text" formControlName="responsiblePerson" />
+            </div>
+
+            <div class="col-12 col-lg-6">
+              <label class="form-label" for="location">Location</label>
+              <input id="location" class="form-control" type="text" formControlName="location" />
+            </div>
+
+            <div class="col-12 col-lg-6">
+              <label class="form-label" for="identifiedDate">Identified Date</label>
+              <input id="identifiedDate" class="form-control" type="date" formControlName="identifiedDate" />
+            </div>
+
+            <div class="col-12 col-lg-6">
+              <label class="form-label" for="closingDate">Closing Date</label>
+              <input id="closingDate" class="form-control" type="date" formControlName="closingDate" />
+            </div>
+
+            <div class="col-12">
+              <label class="form-label" for="description">Description</label>
+              <textarea id="description" class="form-control" rows="3" formControlName="description"></textarea>
+            </div>
+
+            <div class="col-12">
+              <label class="form-label" for="photos">Photos</label>
+              <input id="photos" class="form-control" type="file" accept="image/*" multiple (change)="onFileChange($event)" />
+
+              @if (selectedPhotos().length > 0) {
+                <div class="image-grid mt-2">
+                  @for (previewUrl of selectedPhotoPreviews(); track previewUrl) {
+                    <button
+                      type="button"
+                      class="image-tile-link"
+                      (click)="openImageViewer(previewUrl)"
+                    >
+                      <img [src]="previewUrl" alt="Selected red tag image preview" />
+                    </button>
+                  }
+                </div>
+              }
+            </div>
+
+            <div class="col-12 d-flex gap-2">
+              <button type="submit" class="btn btn-primary" [disabled]="isSaving()">
+                {{ modalMode() === 'edit' ? 'Update Red Tag' : 'Create Red Tag' }}
+              </button>
+              <button type="button" class="btn btn-outline-secondary" (click)="closeModal()">Cancel</button>
+            </div>
+          </form>
+        </section>
+      }
+    </app-fullscreen-modal>
+  }
+
+  @if (selectedImage(); as imageSrc) {
+    <app-image-viewer [src]="imageSrc" alt="Red tag image" (close)="closeImageViewer()" />
   }
 </section>
