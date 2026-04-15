@@ -69,7 +69,7 @@ export class CategoryChartComponent {
           },
           y: {
             beginAtZero: true,
-            max: 100,
+            max: 5,
             ticks: {
               callback: (value) => `${value}%`
             }
