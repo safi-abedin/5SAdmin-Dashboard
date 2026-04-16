@@ -36,9 +36,8 @@ import { ZoneChartComponent } from './components/zone-chart.component';
     CategoryChartComponent,
     ZoneChartComponent,
     PerformersComponent,
-    FeedbackChartComponent,
-    RecentAuditsComponent
-  ],
+    FeedbackChartComponent
+    ],
   templateUrl: './dashboard-two.component.html',
   styleUrl: './dashboard-two.component.css',
   changeDetection: ChangeDetectionStrategy.OnPush

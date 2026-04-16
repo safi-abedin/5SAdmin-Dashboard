@@ -500,7 +500,8 @@ export class DashboardComponent {
           {
             label: 'Average Score %',
             data: data.departmentInsights.map((item) => item.averagePercentage),
-            backgroundColor: '#6366f1',
+            backgroundColor: ['#1d4ed8', '#0ea5e9', '#10b981','#e90e50', 
+                          '#c81c97','#dfdf45', '#f6670e','#7a09a0', '#cdccba'],
             borderRadius: 6
           }
         ]
@@ -539,7 +540,7 @@ export class DashboardComponent {
           {
             label: 'Performance %',
             data: lowPerformanceData.map((item) => item.percentage),
-            backgroundColor: '#f59e0b',
+            backgroundColor: ['#ef4444','#d45757','#ba5959','#8e6161','#8b6c6c','#847c7c','#8f8a8a'],
             borderRadius: 6
           }
         ]
@@ -632,7 +633,7 @@ export class DashboardComponent {
           {
             label: 'Average Score %',
             data: data.zoneInsights.map((item) => item.averagePercentage),
-            backgroundColor: '#0ea5e9',
+            backgroundColor:['#d89a1d', '#e90e41', '#10b981'],
             borderRadius: 6
           }
         ]
